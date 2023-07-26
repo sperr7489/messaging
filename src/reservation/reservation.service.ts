@@ -12,7 +12,8 @@ export class ReservationService {
   ) {}
 
   async getReservations() {
-    return await this.prismaService.reservation.findMany({});
+    // 추후엔 findmany에 몇개를 가져올 것인지에 대한 내용도 담도록 한다.
+    return await this.prismaService.reservation.findMany();
   }
 
   async postReservation(reservationInfo: ReservationInfo) {
@@ -47,11 +48,6 @@ export class ReservationService {
         },
       });
     }
-    // const place = await this.prismaService.place.upsert({
-    //   where: { description: reservationInfo.placeDescription },
-    //   update: { description: reservationInfo.placeDescription },
-    //   create: { description: reservationInfo.placeDescription },
-    // });
 
     if (user.usedCount !== count) {
       await this.prismaService.user.update({
