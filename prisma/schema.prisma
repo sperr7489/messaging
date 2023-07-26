@@ -11,31 +11,37 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Reservation {
+  id               Int    @id @default(autoincrement())
+  userId           Int?
+  placeId          Int
+  reservationNum   Int    @unique
+  tagReservation   String
+  dateReservation  String
+  price            String
+  user             User?  @relation(fields: [userId], references: [id])
+  place            Place  @relation(fields: [placeId], references: [id])
+
+  @@index([userId])
+  @@index([placeId])
+}
+
 model User {
-  id          Int           @id @default(autoincrement())
-  name        String
-  phoneNumber String?
-  places      Reservation[]
+  id           Int           @id @default(autoincrement())
+  userName     String
+  phoneNumber  String?       @unique
+  usedCount    Int           @default(0)
+  reservations Reservation[]
+}
+
+model MessageBase {
+  id                Int @id @default(autoincrement())
+  maxReservationNum Int @unique @default(0)
 }
 
 model Place {
-  id          Int           @id @default(autoincrement())
-  description String
-  users       Reservation[]
-}
-
-model Reservation {
-  userId          Int
-  placeId         Int
-  reservationNum  Int
-  price           String
-  tagReservation  String
-  dateReservation String
-
-  user  User  @relation(fields: [userId], references: [id])
-  place Place @relation(fields: [placeId], references: [id])
-
-  @@unique([userId, placeId])
-  @@index([userId])
-  @@index([placeId])
+  id           Int           @id @default(autoincrement())
+  description  String        @unique
+  message      String?
+  reservations Reservation[]
 }

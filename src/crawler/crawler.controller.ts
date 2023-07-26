@@ -5,7 +5,7 @@ import { CrawlerService } from './crawler.service';
 export class CrawlerController {
   constructor(private readonly crawlerService: CrawlerService) {}
   @Get()
-  async crawlingUserInfos(): Promise<void> {
-    return await this.crawlerService.crawlingUserInfos();
+  async crawlingReservationInfos() {
+    return await this.crawlerService.crawlingReservationInfos();
   }
 }

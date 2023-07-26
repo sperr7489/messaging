@@ -1,19 +1,36 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import puppeteer, { Browser, ElementHandle, Page } from 'puppeteer';
-import { User } from 'src/user/dtos/user.dto';
+import { MessageService } from 'src/message/message.service';
+import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
+import { ReservationService } from 'src/reservation/reservation.service';
 
 @Injectable()
 export class CrawlerService {
-  async crawlingUserInfos(): Promise<void> {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly reservationService: ReservationService,
+    private readonly messageService: MessageService,
+  ) {}
+  private SPACE_URL = this.configService.get<string>('SPACE_URL');
+  private SPACE_EMAIL = this.configService.get<string>('SPACE_EMAIL');
+  private SPACE_PASSWORD = this.configService.get<string>('SPACE_PASSWORD');
+
+  async crawlingReservationInfos() {
+    // 기존의 가장 높은 예약 번호
+    let reservationMaxNum = await this.messageService.getMaxReservationNum();
+
     let browser: Browser | undefined;
+    let page: Page;
     try {
-      const url: string = 'https://partner.spacecloud.kr/auth/login';
-      browser = await puppeteer.launch({ headless: false });
-      const page: Page = await browser.newPage();
+      const result = [];
+      const url: string = this.SPACE_URL;
+      browser = await puppeteer.launch({ headless: true });
+      page = await browser.newPage();
 
       await page.goto(url);
-      const userEmail = 'eunja6746@gmail.com';
-      const passWord = 'park1610784!';
+      const userEmail = this.SPACE_EMAIL;
+      const passWord = this.SPACE_PASSWORD;
 
       // 아이디와 비밀번호 입력
       await page.type('#email', userEmail); // 실제 웹사이트에 맞게 셀렉터 수정 필요
@@ -46,8 +63,11 @@ export class CrawlerService {
 
       // 사이드바가 렌더링 할 때까지 정리
       await page.waitForSelector('div.menu_top', { timeout: 15000 });
+      const liElement = await page.waitForSelector('.menu_top li:first-child', {
+        visible: true,
+        timeout: 5000,
+      });
 
-      const liElement = await page.$('.menu_top li:first-child');
       if (liElement) {
         await liElement.click();
       } else {
@@ -66,6 +86,7 @@ export class CrawlerService {
       // "sub_detail" 클래스를 갖는 모든 dd 태그를 가져옴
       const details = await page.$$('article.list_box');
 
+      // 각각의 promise.all로 돌면서 반환 준비를 한다.
       await Promise.all(
         details.map(async (detail) => {
           const tagReservation = await this.getInfoAboutReservation(
@@ -91,23 +112,42 @@ export class CrawlerService {
           const reservationNum = await this.getInfoAboutReservation(
             detail,
             'reservation_num',
-          ); // 예약자 전화번호
-          const user = new User(
+          ); // 예약번호
+          const price = await this.getInfoAboutReservation(detail, 'price'); // 예약자 전화번호
+
+          /**
+           * 1. 데이터베이스에 저장되어 있는 reservation에 정보들을 가져온다.
+           * 2. 유저를 구별할 수 있는것은 이름과 전화번호의 조합으로 식별 가능하다.
+           * 3. 장소를 구별하기 위해선 description이 그 정보가 된다.
+           */
+
+          const reservation = new ReservationInfo(
             nameReservation,
             telReservation,
             tagReservation,
             dateReservation,
             placeReservation,
             reservationNum,
+            price,
           );
 
-          user.displayInfo();
+          await this.reservationService.postReservation(reservation);
+
+          if (reservation.reservationNum > reservationMaxNum) {
+            if (tagReservation == '예약확정') result.push(reservation);
+          }
         }),
       );
+      await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
+      await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
+      return result;
     } catch (error) {
       console.error('Error logging in:', error);
       // 에러가 발생하면 다시 호출하도록 한다.
-      this.crawlingUserInfos();
+      await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
+      await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
+
+      await this.crawlingReservationInfos();
     }
   }
 

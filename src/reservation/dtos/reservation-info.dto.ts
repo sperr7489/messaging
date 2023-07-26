@@ -1,10 +1,11 @@
-export class User {
-  name?: string;
+export class ReservationInfo {
+  userName?: string;
   phoneNumber?: string;
   tagReservation?: string;
   dateReservation?: string;
-  placeReservation?: string;
-  reservationNum?: string;
+  placeDescription?: string;
+  reservationNum?: number;
+  price?: string;
 
   constructor(
     nameInput: string,
@@ -13,9 +14,10 @@ export class User {
     dateReservationInput: string,
     placeReservationInput: string,
     reservationNumInput: string,
+    priceInput: string,
   ) {
     try {
-      const name =
+      const userName =
         typeof nameInput === 'string' ? nameInput.match(/예약자명(.+)$/) : null;
       const phoneNumber =
         typeof phoneNumberInput === 'string'
@@ -24,30 +26,34 @@ export class User {
 
       const tagReservation = tagReservationInput ?? null;
       const dateReservation =
-        typeof phoneNumberInput === 'string'
+        typeof dateReservationInput === 'string'
           ? dateReservationInput.match(/날짜\/시간(.+)$/)
           : null;
-      const placeReservation =
-        typeof phoneNumberInput === 'string'
+      const placeDescription =
+        typeof placeReservationInput === 'string'
           ? placeReservationInput.match(/예약공간(.+)$/)
           : null;
       const reservationNum =
         typeof reservationNumInput === 'string'
           ? reservationNumInput.match(/예약번호(.+)$/)
           : null;
-      this.name = name ? name[1] : '';
+      const price =
+        typeof priceInput === 'string' ? priceInput.match(/가격(.+)$/) : null;
+
+      this.userName = userName ? userName[1] : '';
       this.phoneNumber = phoneNumber ? phoneNumber[1] : '';
       this.tagReservation = tagReservation ?? '';
       this.dateReservation = dateReservation ? dateReservation[1] : '';
-      this.placeReservation = placeReservation ? placeReservation[1] : '';
-      this.reservationNum = reservationNum ? reservationNum[1] : '';
+      this.placeDescription = placeDescription ? placeDescription[1] : '';
+      this.reservationNum = reservationNum ? Number(reservationNum[1]) : 0;
+      this.price = price ? price[1] : '';
     } catch (error) {
       console.log(error);
     }
   }
   displayInfo(): void {
     console.log(
-      `name: ${this.name}, phoneNumber: ${this.phoneNumber}, tagReservation: ${this.tagReservation}, dateReservation: ${this.dateReservation}, placeReservation: ${this.placeReservation}, reservationNum: ${this.reservationNum}`,
+      `name: ${this.userName}, phoneNumber: ${this.phoneNumber}, tagReservation: ${this.tagReservation}, dateReservation: ${this.dateReservation}, placeDescription: ${this.placeDescription}, reservationNum: ${this.reservationNum}, price : ${this.price}`,
     );
   }
 }
