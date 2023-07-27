@@ -9,6 +9,7 @@ import { ReservationService } from './reservation/reservation.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { MessageService } from './message/message.service';
 import { AligoService } from './aligo-sms/aligo-sms.service';
+import { ScheduleModule } from './schedule/schedule.module';
 
 @Module({
   controllers: [AppController],
@@ -24,6 +25,7 @@ import { AligoService } from './aligo-sms/aligo-sms.service';
     CrawlerModule,
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    ScheduleModule,
   ],
 })
 export class AppModule {}

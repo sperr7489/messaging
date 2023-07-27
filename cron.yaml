@@ -1,0 +1,5 @@
+version: 1
+cron:
+  - name: 'messaging'
+    url: '/schedule'
+    schedule: '0 */5 * * *'

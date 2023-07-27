@@ -6,21 +6,23 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const isDevelopment = configService.get('NODE_ENV') === 'development';
-  app.setGlobalPrefix('api', {
-    exclude: ['/'],
-  });
-  const options = new DocumentBuilder()
+  // app.setGlobalPrefix('api', {
+  //   exclude: ['/'],
+  // });
+  // 스웨거 문서 생성을 위한 설정 객체 생성
+  const config = new DocumentBuilder()
     .setTitle('My API')
-    .setDescription('My API description')
+    .setDescription('API 문서를 위한 NestJS 프로젝트')
     .setVersion('1.0')
-    .addTag('mytag')
     .build();
 
+  // 스웨거 문서 생성
   if (isDevelopment) {
-    const document = SwaggerModule.createDocument(app, options);
-    SwaggerModule.setup('api-docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
   }
 
+  // 스웨거 UI 설정
   await app.listen(3001);
 }
 bootstrap();

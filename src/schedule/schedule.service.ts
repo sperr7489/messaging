@@ -17,12 +17,14 @@ export class ScheduleService {
   async runScheduledTask() {
     // 여기에 주기적으로 실행할 로직을 작성합니다.
     // 예: 다른 API를 요청하는 코드
-    const url = this.configService.get<string>('URL');
-    console.log(url);
 
     // 처음 실행했을 때 스페이스클라우드의 데이터를 긁어온다.
-    const toMessageUsers: ReservationInfo[] =
+    let toMessageUsers: ReservationInfo[] =
       await this.crawlerService.crawlingReservationInfos();
+
+    if (!toMessageUsers) {
+      toMessageUsers = [];
+    }
     console.log(toMessageUsers);
     if (toMessageUsers.length > 0) {
       // 메시지 보낼 사람이 추가적으로 존재한다면 다음과 같은 절차 진행
