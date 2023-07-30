@@ -1,5 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider     = "mysql"
@@ -7,20 +8,16 @@ datasource db {
   relationMode = "prisma"
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Reservation {
-  id               Int    @id @default(autoincrement())
-  userId           Int?
-  placeId          Int
-  reservationNum   Int    @unique
-  tagReservation   String
-  dateReservation  String
-  price            String
-  user             User?  @relation(fields: [userId], references: [id])
-  place            Place  @relation(fields: [placeId], references: [id])
+  id              Int    @id @default(autoincrement())
+  userId          Int?
+  reservationNum  Int    @unique
+  tagReservation  String
+  dateReservation String
+  price           String
+  placeId         Int
+  user            User?  @relation(fields: [userId], references: [id])
+  place           Place  @relation(fields: [placeId], references: [id])
 
   @@index([userId])
   @@index([placeId])

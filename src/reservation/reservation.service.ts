@@ -19,9 +19,7 @@ export class ReservationService {
   async postReservation(reservationInfo: ReservationInfo) {
     const user = await this.prismaService.user.upsert({
       where: { phoneNumber: reservationInfo.phoneNumber },
-      update: {
-        userName: reservationInfo.userName,
-      },
+      update: {},
       create: {
         userName: reservationInfo.userName,
         phoneNumber: reservationInfo.phoneNumber,

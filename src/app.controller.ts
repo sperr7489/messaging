@@ -14,7 +14,7 @@ export class AppController {
     return this.appService.getHello();
   }
   @Get('maxReservations')
-  async getMaxReservationNumber() {
-    return await this.messageService.createMaxReservationNum(23232);
+  async getMaxReservationNumber(reservationNum: number) {
+    return await this.messageService.createMaxReservationNum(reservationNum);
   }
 }

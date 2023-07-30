@@ -19,16 +19,18 @@ export class CrawlerService {
   async crawlingReservationInfos() {
     // 기존의 가장 높은 예약 번호
     let reservationMaxNum = await this.messageService.getMaxReservationNum();
-
     let browser: Browser | undefined;
     let page: Page;
     try {
       const result = [];
       const url: string = this.SPACE_URL;
-      browser = await puppeteer.launch({ headless: true });
+      browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
       page = await browser.newPage();
 
-      await page.goto(url);
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
       const userEmail = this.SPACE_EMAIL;
       const passWord = this.SPACE_PASSWORD;
 
@@ -131,11 +133,14 @@ export class CrawlerService {
             price,
           );
 
-          await this.reservationService.postReservation(reservation);
+          if (reservation.phoneNumber) {
+            await this.reservationService.postReservation(reservation);
+          }
 
           if (reservation.reservationNum > reservationMaxNum) {
             if (tagReservation == '예약확정') result.push(reservation);
           }
+          // reservation.displayInfo();
         }),
       );
       await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
@@ -144,6 +149,7 @@ export class CrawlerService {
     } catch (error) {
       console.error('Error logging in:', error);
       // 에러가 발생하면 다시 호출하도록 한다.
+
       await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
       await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
 

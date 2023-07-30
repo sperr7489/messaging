@@ -21,4 +21,11 @@ export class MessageService {
     });
     return reservationMaxNum._max.maxReservationNum;
   }
+
+  async getPlaceInfoOfSms(placeDescription: string) {
+    return await this.prismaService.place.findUnique({
+      where: { description: placeDescription },
+      select: { message: true },
+    });
+  }
 }

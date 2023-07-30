@@ -23,6 +23,6 @@ async function bootstrap() {
   }
 
   // 스웨거 UI 설정
-  await app.listen(3001);
+  await app.listen(3000);
 }
 bootstrap();

@@ -1,7 +1,12 @@
 {
   "AWSEBDockerrunVersion": "1",
-  "Logging": "/tmp/auto-messaging.log",
   "Image": {
-    "Update": "false"
-  }
+    "Name": "auto-messaging",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "3000"
+    }
+  ]
 }
