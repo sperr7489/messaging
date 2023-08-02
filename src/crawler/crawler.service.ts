@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import puppeteer, { Browser, ElementHandle, Page } from 'puppeteer';
+import { AligoService } from 'src/aligo-sms/aligo-sms.service';
 import { MessageService } from 'src/message/message.service';
 import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
 import { ReservationService } from 'src/reservation/reservation.service';
@@ -11,14 +12,19 @@ export class CrawlerService {
     private readonly configService: ConfigService,
     private readonly reservationService: ReservationService,
     private readonly messageService: MessageService,
+    private readonly aligoService: AligoService,
   ) {}
   private SPACE_URL = this.configService.get<string>('SPACE_URL');
   private SPACE_EMAIL = this.configService.get<string>('SPACE_EMAIL');
   private SPACE_PASSWORD = this.configService.get<string>('SPACE_PASSWORD');
 
   async crawlingReservationInfos() {
-    // 기존의 가장 높은 예약 번호
-    let reservationMaxNum = await this.messageService.getMaxReservationNum();
+    // 크롤링하기 전에 우선 등록되어 있는 연습실들의 정보들을 먼저 가져온다 => 불필요한 디비 접근을 막기 위해
+    const places = await this.messageService.getPlaces();
+
+    // 기존 예약 정보중 가장 높은 예약 번호
+    let reservationMaxNumOfDb =
+      (await this.messageService.getMaxReservationNum()) ?? 0;
     let browser: Browser | undefined;
     let page: Page;
     try {
@@ -26,6 +32,7 @@ export class CrawlerService {
       const url: string = this.SPACE_URL;
       browser = await puppeteer.launch({
         headless: 'new',
+        // headless: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
       page = await browser.newPage();
@@ -67,11 +74,12 @@ export class CrawlerService {
       await page.waitForSelector('div.menu_top', { timeout: 15000 });
       const liElement = await page.waitForSelector('.menu_top li:first-child', {
         visible: true,
-        timeout: 5000,
+        timeout: 20000,
       });
 
       if (liElement) {
         await liElement.click();
+        // await page.evaluate((el) => el.scrollIntoView(), liElement);
       } else {
         console.error(
           'First "li" inside element with class "menu_top" not found',
@@ -91,60 +99,104 @@ export class CrawlerService {
       // 각각의 promise.all로 돌면서 반환 준비를 한다.
       await Promise.all(
         details.map(async (detail) => {
-          const tagReservation = await this.getInfoAboutReservation(
-            detail,
-            'tag',
-          ); // 예약 확정 여부
-          const placeReservation = await this.getInfoAboutReservation(
-            detail,
-            'place',
-          ); // 예약 공간 정보
-          const dateReservation = await this.getInfoAboutReservation(
-            detail,
-            'date',
-          ); // 예약 날짜 시간
-          const nameReservation = await this.getInfoAboutReservation(
-            detail,
-            'user',
-          ); // 예약자명
-          const telReservation = await this.getInfoAboutReservation(
-            detail,
-            'tel',
-          ); // 예약자 전화번호
-          const reservationNum = await this.getInfoAboutReservation(
+          let reservationNum = await this.getInfoAboutReservation(
             detail,
             'reservation_num',
           ); // 예약번호
-          const price = await this.getInfoAboutReservation(detail, 'price'); // 예약자 전화번호
 
-          /**
-           * 1. 데이터베이스에 저장되어 있는 reservation에 정보들을 가져온다.
-           * 2. 유저를 구별할 수 있는것은 이름과 전화번호의 조합으로 식별 가능하다.
-           * 3. 장소를 구별하기 위해선 description이 그 정보가 된다.
-           */
+          const reservationNumber =
+            typeof reservationNum === 'string'
+              ? Number(reservationNum.match(/예약번호(.+)$/)[1])
+              : null;
+          if (reservationNumber > reservationMaxNumOfDb) {
+            // 최대 예약 번호 이하인 경우에는 이미 크롤링이 완료된 것이기에 크롤링 작업할 필요 없다.
+            const tagReservation = await this.getInfoAboutReservation(
+              detail,
+              'tag',
+            ); // 예약 확정 여부
+            const placeReservation = await this.getInfoAboutReservation(
+              detail,
+              'place',
+            ); // 예약 공간 정보
+            const dateReservation = await this.getInfoAboutReservation(
+              detail,
+              'date',
+            ); // 예약 날짜 시간
+            const nameReservation = await this.getInfoAboutReservation(
+              detail,
+              'user',
+            ); // 예약자명
+            const telReservation = await this.getInfoAboutReservation(
+              detail,
+              'tel',
+            ); // 예약자 전화번호
+            const price = await this.getInfoAboutReservation(detail, 'price'); // 예약자 전화번호
 
-          const reservation = new ReservationInfo(
-            nameReservation,
-            telReservation,
-            tagReservation,
-            dateReservation,
-            placeReservation,
-            reservationNum,
-            price,
-          );
+            /**
+             * 1. 데이터베이스에 저장되어 있는 reservation에 정보들을 가져온다.
+             * 2. 유저를 구별할 수 있는것은 이름과 전화번호의 조합으로 식별 가능하다.
+             * 3. 장소를 구별하기 위해선 description이 그 정보가 된다.
+             */
 
-          if (reservation.phoneNumber) {
-            await this.reservationService.postReservation(reservation);
+            const reservation = new ReservationInfo(
+              nameReservation,
+              telReservation,
+              tagReservation,
+              dateReservation,
+              placeReservation,
+              reservationNumber,
+              price,
+            );
+
+            // if (reservation.phoneNumber) {
+            //   await this.reservationService.postReservation(reservation);
+            // }
+
+            // if (tagReservation == '예약확정') result.push(reservation);
+            // 예약확정인 것들에 대해서 바로 문자 보내기 로직
+            if (tagReservation == '예약확정') {
+              const placeInfo = reservation.placeDescription.replace(
+                /,| /g,
+                '',
+              );
+
+              let place = places.find(
+                (place) => place.description == placeInfo,
+              );
+
+              // 디비에 없는 장소면 저장
+              if (!place.message) {
+                place = await this.reservationService.createPlace(placeInfo);
+              }
+
+              // 예약 정보 수정
+              await this.reservationService.postReservation(
+                reservation,
+                place.id,
+              );
+
+              // sms 메시지 로직
+              const phoneNumber = reservation.phoneNumber.replace(/-/g, '');
+              await this.aligoService.sendSMS(phoneNumber, place.message);
+              result.push(reservation);
+            }
           }
-
-          if (reservation.reservationNum > reservationMaxNum) {
-            if (tagReservation == '예약확정') result.push(reservation);
-          }
-          // reservation.displayInfo();
         }),
       );
       await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
       await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
+
+      // 크롤링 한 것중에 가장 높은 값. 구하는 함수
+      if (result.length > 0) {
+        const reservationMaxNumOfCrawl = Math.max(
+          ...result.map((v) => v.reservationNum),
+        );
+        await this.messageService.createMaxReservationNum(
+          reservationMaxNumOfCrawl,
+        );
+        // 이제 이값으로 최댓값을 수정한다.
+      }
+
       return result;
     } catch (error) {
       console.error('Error logging in:', error);

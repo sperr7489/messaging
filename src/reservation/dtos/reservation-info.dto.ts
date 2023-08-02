@@ -13,7 +13,7 @@ export class ReservationInfo {
     tagReservationInput: string,
     dateReservationInput: string,
     placeReservationInput: string,
-    reservationNumInput: string,
+    reservationNumInput: number,
     priceInput: string,
   ) {
     try {
@@ -33,10 +33,7 @@ export class ReservationInfo {
         typeof placeReservationInput === 'string'
           ? placeReservationInput.match(/예약공간(.+)$/)
           : null;
-      const reservationNum =
-        typeof reservationNumInput === 'string'
-          ? reservationNumInput.match(/예약번호(.+)$/)
-          : null;
+
       const price =
         typeof priceInput === 'string' ? priceInput.match(/가격(.+)$/) : null;
 
@@ -45,8 +42,8 @@ export class ReservationInfo {
       this.tagReservation = tagReservation ?? '';
       this.dateReservation = dateReservation ? dateReservation[1] : '';
       this.placeDescription = placeDescription ? placeDescription[1] : '';
-      this.reservationNum = reservationNum ? Number(reservationNum[1]) : 0;
       this.price = price ? price[1] : '';
+      this.reservationNum = reservationNumInput;
     } catch (error) {
       console.log(error);
     }

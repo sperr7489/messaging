@@ -8,8 +8,4 @@ export class MessageController {
     private readonly messageService: MessageService,
     private readonly aligoService: AligoService,
   ) {}
-  @Post()
-  async sendMessage() {
-    return await this.aligoService.sendSMS('01024087489', '기창아 이거 봐라');
-  }
 }
