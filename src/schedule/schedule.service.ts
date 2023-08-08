@@ -43,7 +43,6 @@ export class ScheduleService implements OnModuleInit {
           places,
           reservationMaxNumOfDb,
         )) || [];
-      console.log('messageInfos  : ' + messageInfos);
 
       console.log(`${new Date()} : , ${messageInfos}}`);
       if (messageInfos.length > 0) {
@@ -57,23 +56,16 @@ export class ScheduleService implements OnModuleInit {
 
         await Promise.all(
           messageInfos.map(async (messageInfo) => {
-            // console.log('메시지가 보내졌습니다.');
-            // console.log(
-            //   'messageInfo.reservationNum : ' + messageInfo.reservationNum,
-            //   'messageInfo.message : ' + messageInfo.message,
-            // );
-            // const smsInfo = await this.aligoService.sendSMS(
-            //   '01024087489',
-            //   messageInfo.message,
-            // );
-            // console.log('smsInfo : ' + smsInfo);
+            console.log(
+              'messageInfo.reservationNum : ' + messageInfo.reservationNum,
+              'messageInfo.phoneNumber : ' + messageInfo.phoneNumber,
+            );
+            await this.aligoService.sendSMS('01024087489', messageInfo.message);
           }),
         );
         //2번
         const reservationMaxNumOfCrawl = Math.max(
           ...messageInfos.map((v) => {
-            console.log(v.reservationNum);
-
             return v.reservationNum;
           }),
         );

@@ -105,8 +105,7 @@ export class CrawlerService {
       const details = await page.$$('article.list_box');
 
       // 각각의 promise.all로 돌면서 반환 준비를 한다.
-      const result: MessageDto[] = [];
-      await Promise.all(
+      const result: MessageDto[] = await Promise.all(
         details.map(async (detail) => {
           let reservationNum = await this.getInfoAboutReservation(
             detail,
@@ -119,8 +118,6 @@ export class CrawlerService {
               : null;
 
           if (reservationNumber > reservationMaxNumOfDb) {
-            console.log('Test2');
-
             // 최대 예약 번호 이하인 경우에는 이미 크롤링이 완료된 것이기에 크롤링 작업할 필요 없다.
             const tagReservation = await this.getInfoAboutReservation(
               detail,
@@ -128,8 +125,6 @@ export class CrawlerService {
             ); // 예약 확정 여부
 
             if (tagReservation == '예약확정') {
-              console.log('Test3');
-
               // 작업이 시작될 때
               const placeReservation = await this.getInfoAboutReservation(
                 detail,
@@ -164,6 +159,7 @@ export class CrawlerService {
                 reservationNumber,
                 price,
               );
+
               const placeInfo = reservation.placeDescription.replace(
                 /,| /g,
                 '',
@@ -174,7 +170,7 @@ export class CrawlerService {
               );
 
               // 디비에 없는 장소면 추가 저장
-              if (!place.message) {
+              if (!place) {
                 place = await this.reservationService.createPlace(placeInfo);
               }
 
@@ -186,12 +182,12 @@ export class CrawlerService {
               // sms 메시지 로직
               const phoneNumber = reservation.phoneNumber.replace(/-/g, '');
 
-              result.push({
+              return {
                 phoneNumber: phoneNumber,
                 message: place.message,
                 description: place.description,
                 reservationNum: reservation.reservationNum,
-              });
+              };
             }
           }
         }),
@@ -199,14 +195,10 @@ export class CrawlerService {
 
       // 페이지 닫기 전 확인
       // await page.close();
-
-      console.log('kdlsfnlkdsnfkew : ', result);
-
       return result.filter((v) => v !== undefined);
     } catch (error) {
+      console.error(error);
     } finally {
-      console.log('Testfdsdfsd');
-
       if (page) await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
       if (browser) await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
     }
@@ -225,23 +217,18 @@ export class CrawlerService {
     node: ElementHandle<HTMLElement>,
     querySelector: string,
   ) {
-    // try {
-    //   const element = await node.$(`.${querySelector}`);
+    const element = await node.$(`.${querySelector}`);
 
-    //   if (element) {
-    //     const text = await element.evaluate((v) => v.textContent);
-    //     console.log('text : ', text);
-    //     return text;
-    //   } else {
-    //     console.log(`Element not found for selector ${querySelector}`);
-    //   }
-    // } catch (error) {
-    //   console.log(`Error: ${error} no data in ${querySelector}`);
-    // }
-    try {
-      return await node.$eval(`.${querySelector}`, (v) => v.textContent);
-    } catch (error) {
-      console.log(`${error} no data in ${querySelector}`);
+    if (element) {
+      const text = await element.evaluate((v) => v.textContent);
+      return text;
+    } else {
+      console.log(`Element not found for selector ${querySelector}`);
     }
   }
+  // try {
+  //   return await node.$eval(`.${querySelector}`, (v) => v.textContent);
+  // } catch (error) {
+  //   console.log(`${error} no data in ${querySelector}`);
+  // }
 }
