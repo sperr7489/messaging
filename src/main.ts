@@ -15,6 +15,7 @@ async function bootstrap() {
     .setDescription('API 문서를 위한 NestJS 프로젝트')
     .setVersion('1.0')
     .build();
+  const port = app.get<ConfigService>(ConfigService).get('PORT');
 
   // 스웨거 문서 생성
   if (isDevelopment) {
@@ -23,6 +24,6 @@ async function bootstrap() {
   }
 
   // 스웨거 UI 설정
-  await app.listen(3000);
+  await app.listen(port);
 }
 bootstrap();

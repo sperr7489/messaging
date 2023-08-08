@@ -8,7 +8,7 @@ export class MessageService {
   // 어디에 메시지에 보낼 지 판단해야할 필요가 있다.
   // 예약번호의 최댓값을 저장한다.
   async createMaxReservationNum(reservationNum: number) {
-    await this.prismaService.messageBase.create({
+    return await this.prismaService.messageBase.create({
       data: { maxReservationNum: reservationNum },
     });
   }
