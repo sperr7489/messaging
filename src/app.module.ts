@@ -10,6 +10,7 @@ import { AligoService } from './aligo-sms/aligo-sms.service';
 import { ScheduleModule } from './schedule/schedule.module';
 import { MessageController } from './message/message.controller';
 import { MessageModule } from './message/message.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   controllers: [AppController, MessageController],
@@ -20,6 +21,15 @@ import { MessageModule } from './message/message.module';
     PrismaModule,
     ScheduleModule,
     MessageModule,
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    BullModule.registerQueue({
+      name: 'audio',
+    }),
   ],
 })
 export class AppModule {}
