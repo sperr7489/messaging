@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Place } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -33,9 +34,13 @@ export class MessageService {
   }
 
   // 모든 장소 정보를 가져오기
-  async getPlaces() {
+  async getPlaces(): Promise<Place[]> {
     // [역도보3분]신촌 연습실 제이엔터, C홀 이 있으면 이는 [역도보3분]신촌연습실제이엔터C홀 로 변경된다.
+    const places = await this.prismaService.place.findMany();
 
-    return await this.prismaService.place.findMany();
+    return places.map((place) => ({
+      ...place,
+      description: place.description.replace(/,| /g, ''),
+    }));
   }
 }

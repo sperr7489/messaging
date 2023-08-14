@@ -4,6 +4,7 @@ import { ScheduleService } from './schedule.service';
 import { ScheduleController } from './schedule.controller';
 import { MessageService } from 'src/message/message.service';
 import { AligoService } from 'src/aligo-sms/aligo-sms.service';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [CrawlerModule],
