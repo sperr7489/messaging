@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { async } from 'rxjs';
+import { HostDto } from 'src/host-queue/dtos/host.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
+import {
+  ALEADY_CANCELED,
+  NOT_YET_CANCELED,
+} from './constants/reservation.constant';
 
 @Injectable()
 export class ReservationService {
@@ -75,19 +80,27 @@ export class ReservationService {
     });
   }
 
-  async createPlace(description: string, hostId: number) {
+  async createPlace(description: string, host: HostDto) {
     return await this.prismaService.place.create({
       data: {
         description,
-        message: `${description}에 대한 정보 안내 문자가 아닌 경우 ${this.configService.get<string>(
-          'ALIGO_SENDER',
-        )}로 연락 주세요`,
-        hostId,
+        message: `${description}에 대한 정보 안내 문자가 아닌 경우 ${host.aligoSender} 로 연락 주세요`,
+        hostId: host.id,
       },
     });
   }
   async cancelReservation(reservationNumber: number) {
-    return await this.prismaService.reservation.upsert({
+    const reservation = await this.prismaService.reservation.findUnique({
+      where: {
+        reservationNum: reservationNumber,
+      },
+    });
+
+    if (reservation.tagReservation == '취소환불') {
+      return ALEADY_CANCELED;
+    }
+
+    await this.prismaService.reservation.upsert({
       where: {
         reservationNum: reservationNumber,
       },
@@ -99,5 +112,6 @@ export class ReservationService {
         tagReservation: '취소환불',
       },
     });
+    return NOT_YET_CANCELED;
   }
 }

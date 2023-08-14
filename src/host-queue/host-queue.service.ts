@@ -12,7 +12,7 @@ export class HostQueueService {
   ) {}
 
   // @Cron(CronExpression.EVERY_5_MINUTES)
-  async addJob() {
+  async startQueueMessage() {
     try {
       const hosts = await this.prismaService.host.findMany();
 
@@ -25,7 +25,7 @@ export class HostQueueService {
     }
   }
 
-  async getWaiting() {
+  async getWaitingQueue() {
     const waitingJobs = await this.hostQueue.getWaiting();
     console.log('waitingJobs :  ', waitingJobs);
 

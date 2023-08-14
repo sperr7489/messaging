@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { HostDto } from 'src/host-queue/dtos/host.dto';
 
 @Injectable()
 export class AligoService {
   constructor(private readonly configService: ConfigService) {}
 
-  async sendSMS(phoneNumber: string, message: string) {
+  async sendSMS(phoneNumber: string, message: string, host: HostDto) {
     const apiUrl = 'https://apis.aligo.in/send/';
     const params = new URLSearchParams({
-      key: this.configService.get<string>('ALIGO_KEY'),
-      user_id: this.configService.get<string>('ALIGO_ID'), // 알리고 홈페이지에서 발급받은 사용자 아이디
-      sender: this.configService.get<string>('ALIGO_SENDER'), // 발신자 이름
+      key: host.aligoKey,
+      user_id: host.aligoId,
+      sender: host.aligoSender, // 발신자 이름
       receiver: phoneNumber,
       msg: message,
     });

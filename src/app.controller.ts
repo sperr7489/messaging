@@ -23,16 +23,16 @@ export class AppController {
       hostId,
     );
   }
-  @Get('redis')
+  @Get('waiting-queues')
   async getRedis() {
-    const waitingJobs = await this.hostQueueService.getWaiting();
+    const waitingJobs = await this.hostQueueService.getWaitingQueue();
     return waitingJobs;
   }
 
   @Cron(CronExpression.EVERY_10_MINUTES)
-  @Post('redis')
-  async PostRedis() {
-    return await this.hostQueueService.addJob();
+  @Post('start-queue-message')
+  async queueHosts() {
+    return await this.hostQueueService.startQueueMessage();
   }
 
   @Delete('all-queue')
