@@ -1,14 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Place } from '@prisma/client';
-import axios from 'axios';
 import * as cron from 'node-cron';
-import { async } from 'rxjs';
 import { AligoService } from 'src/aligo-sms/aligo-sms.service';
 import { CrawlerService } from 'src/crawler/crawler.service';
 import { MessageDto } from 'src/message/dtos/message.dto';
 import { MessageService } from 'src/message/message.service';
-import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
 
 @Injectable()
 export class ScheduleService implements OnModuleInit {
