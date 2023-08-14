@@ -25,6 +25,7 @@ export class ReservationService {
         phoneNumber: reservationInfo.phoneNumber,
       },
     });
+
     let userId = user.id;
     const count = await this.prismaService.reservation.count({
       where: {
@@ -74,13 +75,28 @@ export class ReservationService {
     });
   }
 
-  async createPlace(description: string) {
+  async createPlace(description: string, hostId: number) {
     return await this.prismaService.place.create({
       data: {
         description,
-        message: `장소에 대한 안내 문자가 아닌 경우 ${this.configService.get<string>(
+        message: `${description}에 대한 정보 안내 문자가 아닌 경우 ${this.configService.get<string>(
           'ALIGO_SENDER',
         )}로 연락 주세요`,
+        hostId,
+      },
+    });
+  }
+  async cancelReservation(reservationNumber: number) {
+    return await this.prismaService.reservation.upsert({
+      where: {
+        reservationNum: reservationNumber,
+      },
+      update: {
+        tagReservation: '취소환불',
+      },
+      create: {
+        reservationNum: reservationNumber,
+        tagReservation: '취소환불',
       },
     });
   }

@@ -8,16 +8,28 @@ datasource db {
   relationMode = "prisma"
 }
 
-model Reservation {
+model Host {
   id              Int    @id @default(autoincrement())
+  spaceCloudEmail String
+  spaceCloudPw    String
+  aligoId         String
+  aligoKey        String
+  aligoSender     String
+
+  messageBase MessageBase[]
+  place       Place[]
+}
+
+model Reservation {
+  id              Int     @id @default(autoincrement())
   userId          Int?
-  reservationNum  Int    @unique
+  reservationNum  Int     @unique
   tagReservation  String
-  dateReservation String
-  price           String
-  placeId         Int
-  user            User?  @relation(fields: [userId], references: [id])
-  place           Place  @relation(fields: [placeId], references: [id])
+  dateReservation String?
+  price           String?
+  placeId         Int?
+  user            User?   @relation(fields: [userId], references: [id])
+  place           Place?  @relation(fields: [placeId], references: [id])
 
   @@index([userId])
   @@index([placeId])
@@ -26,19 +38,28 @@ model Reservation {
 model User {
   id           Int           @id @default(autoincrement())
   userName     String
-  phoneNumber  String?       @unique
+  phoneNumber  String        @unique
   usedCount    Int           @default(0)
   reservations Reservation[]
 }
 
 model MessageBase {
   id                Int @id @default(autoincrement())
-  maxReservationNum Int @unique @default(0)
+  hostId            Int
+  maxReservationNum Int @default(0)
+
+  host Host @relation(fields: [hostId], references: [id])
+
+  @@index([hostId])
 }
 
 model Place {
   id           Int           @id @default(autoincrement())
+  hostId       Int
   description  String        @unique
   message      String?
   reservations Reservation[]
+  host         Host          @relation(fields: [hostId], references: [id])
+
+  @@index([hostId])
 }

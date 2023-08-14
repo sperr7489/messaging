@@ -12,4 +12,4 @@ import { BullModule } from '@nestjs/bull';
   controllers: [ScheduleController],
   exports: [ScheduleService],
 })
-export class ScheduleModule {}
+export class ScheduleTaskModule {}

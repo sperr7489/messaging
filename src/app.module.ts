@@ -6,19 +6,28 @@ import { CrawlerModule } from './crawler/crawler.module';
 import { ReservationService } from './reservation/reservation.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AligoService } from './aligo-sms/aligo-sms.service';
-import { ScheduleModule } from './schedule/schedule.module';
+import { ScheduleTaskModule } from './schedule/schedule.module';
 import { MessageController } from './message/message.controller';
 import { MessageModule } from './message/message.module';
 import { BullModule } from '@nestjs/bull';
+import { HostQueueService } from './host-queue/host-queue.service';
+import { HostQueueConsumer } from './host-queue/host-queue.consumer';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   controllers: [AppController, MessageController],
-  providers: [AppService, ReservationService, AligoService],
+  providers: [
+    AppService,
+    ReservationService,
+    AligoService,
+    HostQueueService,
+    HostQueueConsumer,
+  ],
   imports: [
     CrawlerModule,
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    ScheduleModule,
+    ScheduleTaskModule,
     MessageModule,
     BullModule.forRoot({
       redis: {
@@ -27,8 +36,9 @@ import { BullModule } from '@nestjs/bull';
       },
     }),
     BullModule.registerQueue({
-      name: 'audio',
+      name: 'host-queue',
     }),
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}
