@@ -22,14 +22,29 @@ export class ReservationService {
   }
 
   async postReservation(reservationInfo: ReservationInfo, placeId: number) {
-    const user = await this.prismaService.user.upsert({
-      where: { phoneNumber: reservationInfo.phoneNumber },
-      update: {},
-      create: {
-        userName: reservationInfo.userName,
+    let user = await this.prismaService.user.findFirst({
+      where: {
         phoneNumber: reservationInfo.phoneNumber,
       },
     });
+
+    if (!user) {
+      user = await this.prismaService.user.create({
+        data: {
+          userName: reservationInfo.userName,
+          phoneNumber: reservationInfo.phoneNumber,
+        },
+      });
+    }
+
+    // user = await this.prismaService.user.upsert({
+    //   where: { phoneNumber: reservationInfo.phoneNumber },
+    //   update: {},
+    //   create: {
+    //     userName: reservationInfo.userName,
+    //     phoneNumber: reservationInfo.phoneNumber,
+    //   },
+    // });
 
     let userId = user.id;
     const count = await this.prismaService.reservation.count({
