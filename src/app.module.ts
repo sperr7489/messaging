@@ -29,11 +29,15 @@ import { ScheduleModule } from '@nestjs/schedule';
     PrismaModule,
     ScheduleTaskModule,
     MessageModule,
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379,
-      },
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+        },
+      }),
+      inject: [ConfigService],
     }),
     BullModule.registerQueue({
       name: 'host-queue',
