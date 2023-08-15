@@ -152,6 +152,9 @@ export class CrawlerService {
                 (place) => place.description == placeInfo,
               );
 
+              // promise.all 은 순차적으로 데이터를 넣는 것이 아니기 때문에 데이터를 긁어올 때 unique값을 정상적으로
+              // 다루지 못할 수도 있다.
+
               // 디비에 없는 장소면 추가 저장
               if (!place) {
                 place = await this.reservationService.createPlace(

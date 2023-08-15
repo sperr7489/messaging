@@ -20,6 +20,11 @@ export class AligoService {
     try {
       const response = await axios.post(apiUrl, params);
       // SMS 발송 성공에 대한 처리
+      console.log(
+        'response.status : ' + response.status,
+        ' response.data : ' + JSON.stringify(response.data),
+      );
+
       return response.data;
     } catch (error) {
       // SMS 발송 실패에 대한 처리

@@ -37,9 +37,13 @@ export class ScheduleService {
         )) || [];
 
       console.log(
-        `${JSON.stringify(host)}, ${new Date()} : , ${JSON.stringify(
-          messageInfos,
-        )}}`,
+        ` ${new Date()} ${host.spaceCloudEmail}, ${
+          host.aligoSender
+        } : ${messageInfos.map((v) => {
+          if (v.message) {
+            return v;
+          }
+        })}  `,
       );
       if (messageInfos.length > 0) {
         // 메시지 보낼 사람이 추가적으로 존재한다면 다음과 같은 절차 진행

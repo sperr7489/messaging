@@ -81,6 +81,16 @@ export class ReservationService {
   }
 
   async createPlace(description: string, host: HostDto) {
+    const place = await this.prismaService.place.findFirst({
+      where: {
+        description,
+        hostId: host.id,
+      },
+    });
+    if (place) {
+      return place;
+    }
+
     return await this.prismaService.place.create({
       data: {
         description,
