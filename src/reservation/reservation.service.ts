@@ -95,8 +95,13 @@ export class ReservationService {
         reservationNum: reservationNumber,
       },
     });
+    // console.log(
+    //   'reservationNumber  : ',
+    //   reservationNumber,
+    //   JSON.stringify('reservation : ' + JSON.stringify(reservation)),
+    // );
 
-    if (reservation.tagReservation == '취소환불') {
+    if (reservation?.tagReservation == '취소환불') {
       return ALEADY_CANCELED;
     }
 
@@ -112,6 +117,6 @@ export class ReservationService {
         tagReservation: '취소환불',
       },
     });
-    return NOT_YET_CANCELED;
+    return;
   }
 }

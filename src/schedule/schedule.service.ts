@@ -53,6 +53,7 @@ export class ScheduleService {
         await Promise.all(
           messageInfos.map(async (messageInfo) => {
             if (messageInfo.message) {
+              console.log(messageInfo.message);
               // 취소환불된 것에는 보내지 않게 하기 위함.
               await this.aligoService.sendSMS(
                 '01024087489',
