@@ -56,10 +56,11 @@ model MessageBase {
 model Place {
   id           Int           @id @default(autoincrement())
   hostId       Int
-  description  String        @unique
+  description  String        
   message      String?
   reservations Reservation[]
   host         Host          @relation(fields: [hostId], references: [id])
 
+  @@unique([hostId,description])
   @@index([hostId])
 }

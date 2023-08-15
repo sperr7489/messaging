@@ -35,16 +35,6 @@ export class MessageService {
     return reservationMaxNum._max.maxReservationNum;
   }
 
-  async getPlaceInfoOfSms(placeDescription: string) {
-    // [역도보3분]신촌 연습실 제이엔터, C홀 이 있으면 이는 [역도보3분]신촌연습실제이엔터C홀 로 변경된다.
-    const placeString = placeDescription.replace(/,| /g, '');
-
-    return await this.prismaService.place.findUnique({
-      where: { description: placeString },
-      select: { message: true },
-    });
-  }
-
   // 모든 장소 정보를 가져오기
   async getPlaces(): Promise<Place[]> {
     // [역도보3분]신촌 연습실 제이엔터, C홀 이 있으면 이는 [역도보3분]신촌연습실제이엔터C홀 로 변경된다.
