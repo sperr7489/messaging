@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:16-alpine
 
 RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont udev xvfb x11vnc fluxbox dbus
 RUN apk add --no-cache --virtual .build-deps curl \
