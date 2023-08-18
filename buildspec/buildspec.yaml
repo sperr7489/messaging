@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing dependencies...
+      - npm install
+  build:
+    commands:
+      - echo Build started on `date`
+      - npm run build
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo prisma migrate on `date`
+      - npx prisma migrate deploy
+      - echo migrate completed on `date`
+      - echo build dev finished on `date`
+
+artifacts:
+  files:
+    - dist/**/*
+    - package-lock.json
+    - package.json
+    - Dockerfile
+    - prisma/**/*
+
+cache:
+  paths:
+    - node_modules/**/*
