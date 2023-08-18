@@ -65,8 +65,8 @@ export class ScheduleService {
               );
 
               await this.aligoService.sendSMS(
-                '01024087489',
-                `원래는 ${messageInfo.phoneNumber}로 다음 메시지 보낸다.\n ${messageInfo.message}`,
+                messageInfo.phoneNumber,
+                `${messageInfo.message}`,
                 host,
               );
             }
