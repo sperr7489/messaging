@@ -38,7 +38,7 @@ model Reservation {
 model User {
   id           Int           @id @default(autoincrement())
   userName     String
-  phoneNumber  String        
+  phoneNumber  String
   usedCount    Int           @default(0)
   reservations Reservation[]
 }
@@ -56,8 +56,8 @@ model MessageBase {
 model Place {
   id           Int           @id @default(autoincrement())
   hostId       Int
-  description  String        
-  message      String?
+  description  String
+  message      String?       @db.VarChar(500)
   reservations Reservation[]
   host         Host          @relation(fields: [hostId], references: [id])
 
