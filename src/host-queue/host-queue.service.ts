@@ -29,7 +29,7 @@ export class HostQueueService {
     const waitingJobs = await this.hostQueue.getWaiting();
     console.log('waitingJobs :  ', waitingJobs);
 
-    return waitingJobs;
+    return { count: waitingJobs.length, waitingJobs: waitingJobs };
   }
 
   async deleteAllBullQueues() {
