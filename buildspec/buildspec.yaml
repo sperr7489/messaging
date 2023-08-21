@@ -7,6 +7,9 @@ phases:
     commands:
       - echo Installing dependencies...
       - npm install
+  pre-build:
+    commands:
+      - prisma generate
   build:
     commands:
       - echo Build started on `date`
