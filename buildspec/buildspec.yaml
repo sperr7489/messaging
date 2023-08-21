@@ -9,6 +9,7 @@ phases:
       - npm install
   pre_build:
     commands:
+      - npm install -g prisma
       - prisma generate
   build:
     commands:
