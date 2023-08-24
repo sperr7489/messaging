@@ -15,7 +15,6 @@ export class AligoService {
       sender: host.aligoSender, // 발신자 이름
       receiver: phoneNumber,
       msg: message,
-      msg_type: 'LMS',
     });
 
     try {

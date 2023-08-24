@@ -36,15 +36,6 @@ export class ScheduleService {
           host,
         )) || [];
 
-      console.log(
-        ` ${new Date()} ${host.spaceCloudEmail}, ${
-          host.aligoSender
-        } : ${messageInfos.map((v) => {
-          if (v.message) {
-            return v;
-          }
-        })}  `,
-      );
       if (messageInfos.length > 0) {
         // 메시지 보낼 사람이 추가적으로 존재한다면 다음과 같은 절차 진행
         /**
@@ -64,11 +55,11 @@ export class ScheduleService {
                 }, ${messageInfo.phoneNumber}`,
               );
 
-              // await this.aligoService.sendSMS(
-              //   messageInfo.phoneNumber,
-              //   `${messageInfo.message}`,
-              //   host,
-              // );
+              await this.aligoService.sendSMS(
+                messageInfo.phoneNumber,
+                `${messageInfo.message}`,
+                host,
+              );
             }
           }),
         );
