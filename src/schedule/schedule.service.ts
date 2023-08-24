@@ -55,11 +55,17 @@ export class ScheduleService {
                 }, ${messageInfo.phoneNumber}`,
               );
 
+              await this.aligoService.sendSMS(
+                '01024087489',
+                `${messageInfo.message}`,
+                host,
+              );
+
               // await this.aligoService.sendSMS(
-              // messageInfo.phoneNumber,
-              // `${messageInfo.message}`,
-              // host,
-              // );
+              //   messageInfo.phoneNumber,
+              //   `${messageInfo.message}`,
+              //   host,
+              //   );
             }
           }),
         );
