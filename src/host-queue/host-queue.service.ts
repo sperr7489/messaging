@@ -14,7 +14,11 @@ export class HostQueueService {
   // @Cron(CronExpression.EVERY_5_MINUTES)
   async startQueueMessage() {
     try {
-      const hosts = await this.prismaService.host.findMany();
+      const hosts = await this.prismaService.host.findMany({
+        where: {
+          status: 'U',
+        },
+      });
 
       for (const host of hosts) {
         const hostDto = new HostDto(host);

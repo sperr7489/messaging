@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Host` MODIFY `status` VARCHAR(4) NOT NULL DEFAULT 'U';
