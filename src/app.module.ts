@@ -13,13 +13,13 @@ import { BullModule } from '@nestjs/bull';
 import { HostQueueService } from './host-queue/host-queue.service';
 import { HostQueueConsumer } from './host-queue/host-queue.consumer';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AligoSmsModule } from './aligo-sms/aligo-sms.module';
 
 @Module({
   controllers: [AppController, MessageController],
   providers: [
     AppService,
     ReservationService,
-    AligoService,
     HostQueueService,
     HostQueueConsumer,
   ],
@@ -43,6 +43,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       name: 'host-queue',
     }),
     ScheduleModule.forRoot(),
+    AligoSmsModule,
   ],
 })
 export class AppModule {}

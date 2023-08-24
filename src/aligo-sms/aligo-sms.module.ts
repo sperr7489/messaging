@@ -3,17 +3,11 @@ import { AligoService } from 'src/aligo-sms/aligo-sms.service';
 import { MessageService } from 'src/message/message.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReservationService } from 'src/reservation/reservation.service';
-import { CrawlerController } from './crawler.controller';
-import { CrawlerService } from './crawler.service';
+import { AligoController } from './aligo-sms.controller';
 
 @Module({
-  controllers: [CrawlerController],
-  providers: [
-    CrawlerService,
-    ReservationService,
-    PrismaService,
-    MessageService,
-  ],
-  exports: [CrawlerService],
+  controllers: [AligoController],
+  providers: [PrismaService, AligoService],
+  exports: [AligoService],
 })
-export class CrawlerModule {}
+export class AligoSmsModule {}

@@ -44,6 +44,8 @@ export class AligoService {
     });
 
     try {
+      console.log('test');
+
       const response = await axios.post(apiUrl, params);
       // SMS 발송 성공에 대한 처리
       console.log(

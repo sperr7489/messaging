@@ -41,8 +41,4 @@ export class AppController {
   async deleteAllBullQueues() {
     return await this.hostQueueService.deleteAllBullQueues();
   }
-  @Post('test-sms')
-  async testSms() {
-    return this.aligoService.testSendSMS();
-  }
 }
