@@ -3,6 +3,7 @@ import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { HostDto } from './dtos/host.dto';
+import { HostStatus } from 'src/constants/host-status.constant';
 
 @Injectable()
 export class HostQueueService {
@@ -16,7 +17,7 @@ export class HostQueueService {
     try {
       const hosts = await this.prismaService.host.findMany({
         where: {
-          status: 'U',
+          status: HostStatus.USE,
         },
       });
 
