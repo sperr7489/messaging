@@ -1,5 +1,6 @@
 import { Controller, Delete, Get, Post } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { AligoService } from './aligo-sms/aligo-sms.service';
 import { AppService } from './app.service';
 import { HostQueueService } from './host-queue/host-queue.service';
 import { MessageService } from './message/message.service';
@@ -10,6 +11,7 @@ export class AppController {
     private readonly appService: AppService,
     private readonly messageService: MessageService,
     private readonly hostQueueService: HostQueueService,
+    private readonly aligoService: AligoService,
   ) {}
 
   @Get()
@@ -38,5 +40,9 @@ export class AppController {
   @Delete('all-queue')
   async deleteAllBullQueues() {
     return await this.hostQueueService.deleteAllBullQueues();
+  }
+  @Post('test-sms')
+  async testSms() {
+    return this.aligoService.testSendSMS();
   }
 }

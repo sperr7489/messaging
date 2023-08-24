@@ -31,4 +31,30 @@ export class AligoService {
       throw new Error('Failed to send SMS.');
     }
   }
+
+  async testSendSMS() {
+    const apiUrl = 'https://apis.aligo.in/send/';
+    const params = new URLSearchParams({
+      key: 'jiz2mrufqpggjmlkktvgmle6jxhcorcm',
+      user_id: 'baroandco',
+      sender: '01095291129', // 발신자 이름
+      receiver: '01024087489',
+      msg: ' this is test mode',
+      testmode_yn: 'Y',
+    });
+
+    try {
+      const response = await axios.post(apiUrl, params);
+      // SMS 발송 성공에 대한 처리
+      console.log(
+        'response.status : ' + response.status,
+        ' response.data : ' + JSON.stringify(response.data),
+      );
+
+      return response;
+    } catch (error) {
+      // SMS 발송 실패에 대한 처리
+      throw new Error('Failed to send SMS.');
+    }
+  }
 }
