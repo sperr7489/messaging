@@ -58,7 +58,7 @@ model Place {
   id           Int           @id @default(autoincrement())
   hostId       Int
   description  String
-  message      String?       @db.VarChar(500)
+  message      String?       @db.VarChar(2000)
   reservations Reservation[]
   host         Host          @relation(fields: [hostId], references: [id])
 
