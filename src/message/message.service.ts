@@ -42,7 +42,7 @@ export class MessageService {
 
     return places.map((place) => ({
       ...place,
-      description: place.description.replace(/\s/g, ''),
+      description: place.description.replace(/\s|,/g, ''),
     }));
   }
   async getPlacesByQueue(hostId: number): Promise<Place[]> {
@@ -53,7 +53,7 @@ export class MessageService {
 
     return places.map((place) => ({
       ...place,
-      description: place.description.replace(/\s/g, ''),
+      description: place.description.replace(/\s|,/g, ''),
     }));
   }
 }
