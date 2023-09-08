@@ -143,10 +143,7 @@ export class CrawlerService {
                 price,
               );
 
-              const placeInfo = reservation.placeDescription.replace(
-                /,| /g,
-                '',
-              );
+              const placeInfo = reservation.placeDescription.replace(/\s/g, '');
 
               let place = places.find(
                 (place) => place.description == placeInfo,
