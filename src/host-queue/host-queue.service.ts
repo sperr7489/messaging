@@ -14,6 +14,11 @@ export class HostQueueService {
 
   // @Cron(CronExpression.EVERY_5_MINUTES)
   async startQueueMessage() {
+    const jobOptions = {
+      removeOnComplete: true,
+      removeOnFail: true,
+    };
+
     try {
       const hosts = await this.prismaService.host.findMany({
         where: {
@@ -23,7 +28,10 @@ export class HostQueueService {
 
       for (const host of hosts) {
         const hostDto = new HostDto(host);
-        await this.hostQueue.add('process-host', hostDto);
+        await this.hostQueue.add('process-host', hostDto, {
+          removeOnComplete: true,
+          removeOnFail: true,
+        });
       }
     } catch (error) {
       console.error(error);
