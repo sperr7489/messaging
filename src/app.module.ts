@@ -42,7 +42,7 @@ import { AligoSmsModule } from './aligo-sms/aligo-sms.module';
     BullModule.registerQueue({
       name: 'host-queue',
       defaultJobOptions: {
-        timeout: 10 * 1000, //60*1000 이 60초로 1분이다.
+        timeout: 30 * 1000, //60*1000 이 60초로 1분이다.
       },
     }),
     ScheduleModule.forRoot(),
