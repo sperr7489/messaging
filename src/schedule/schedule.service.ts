@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Place } from '@prisma/client';
 import { AligoService } from 'src/aligo-sms/aligo-sms.service';
 import { CrawlerService } from 'src/crawler/crawler.service';
@@ -12,9 +13,11 @@ export class ScheduleService {
     private readonly crawlerService: CrawlerService,
     private readonly aligoService: AligoService,
     private readonly messageService: MessageService,
+    private readonly configService: ConfigService,
   ) {}
 
   async runScheduledTaskQueue(host: HostDto) {
+    const NODE_ENV = this.configService.get<string>('NODE_ENV');
     // 여기에 주기적으로 실행할 로직을 작성합니다.
     // 예: 다른 API를 요청하는 코드
     try {
@@ -61,11 +64,17 @@ export class ScheduleService {
               //   host,
               // );
 
-              await this.aligoService.sendSMS(
-                messageInfo.phoneNumber,
-                `${messageInfo.message}`,
-                host,
-              );
+              if (NODE_ENV == 'production') {
+                // 배포단계
+                await this.aligoService.sendSMS(
+                  messageInfo.phoneNumber,
+                  `${messageInfo.message}`,
+                  host,
+                );
+              } else {
+                // 개발 단계
+                console.log('Test 단계');
+              }
             }
           }),
         );
