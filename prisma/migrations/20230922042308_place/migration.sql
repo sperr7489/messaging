@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Place` ADD COLUMN `status` VARCHAR(4) NOT NULL DEFAULT 'U';
