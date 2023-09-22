@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Place } from '@prisma/client';
+import { PlaceStatus } from 'src/constants/host-status.constant';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -48,7 +49,7 @@ export class MessageService {
   async getPlacesByQueue(hostId: number): Promise<Place[]> {
     // [역도보3분]신촌 연습실 제이엔터, C홀 이 있으면 이는 [역도보3분]신촌연습실제이엔터C홀 로 변경된다.
     const places = await this.prismaService.place.findMany({
-      where: { hostId },
+      where: { hostId: hostId, status: PlaceStatus.USE },
     });
 
     return places.map((place) => ({

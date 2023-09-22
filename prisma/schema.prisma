@@ -61,6 +61,7 @@ model Place {
   message      String?       @db.VarChar(2000)
   reservations Reservation[]
   host         Host          @relation(fields: [hostId], references: [id])
+  status       String        @default("U") @db.VarChar(4)
 
   @@index([hostId])
 }
