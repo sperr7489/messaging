@@ -45,9 +45,16 @@ export class CrawlerService {
       await page.type('#email', userEmail); // 실제 웹사이트에 맞게 셀렉터 수정 필요
       await page.type('#pw', passWord); // 실제 웹사이트에 맞게 셀렉터 수정 필요
 
+      /**
+       * 1. 로그인 로직에 대한 수정이 필요해보임.
+       * 2. puppeteer를 계속해서 사용하다면 서버에 부하가 조금 많이 걸릴 수 있다.
+       * 3. 이때문에 서버가 쉽게 죽을 수 있으니 response를 따서 데이터를 가져오는 식으로 작업하는 것이 좀 더 좋아보임.
+       */
+
       // 로그인 버튼 클릭
       // await page.click('#loginButton'); // 실제 웹사이트에 맞게 셀렉터 수정 필요
       const buttons = await page.$x('//fieldset/button[last()]');
+
       if (buttons.length > 0) {
         const buttonElement = buttons[0] as ElementHandle<Element>;
         await buttonElement.click();
