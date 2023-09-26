@@ -37,8 +37,8 @@ export class CrawlerService {
       const SPACE_EMAIL = host.spaceCloudEmail;
       const SPACE_PASSWORD = host.spaceCloudPw;
       browser = await puppeteer.launch({
-        // headless: 'new',
-        headless: false,
+        headless: 'new',
+        // headless: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
       page = await browser.newPage();
