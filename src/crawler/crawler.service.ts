@@ -125,7 +125,6 @@ export class CrawlerService {
           }
 
           const telReservation = reservation.user_info.contact ?? '0'; // 전화번호
-          console.log(telReservation);
 
           const reservationNumber = reservation.id; // 예약번호
           const placeReservation = // 장소 이름
