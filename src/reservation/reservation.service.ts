@@ -25,6 +25,7 @@ export class ReservationService {
     let user = await this.prismaService.user.findFirst({
       where: {
         phoneNumber: reservationInfo.phoneNumber,
+        userName: reservationInfo.userName,
       },
     });
 
