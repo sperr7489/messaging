@@ -132,17 +132,8 @@ export class CrawlerService {
               reservation.space.space_name + reservation.space.product_name
             ).replace(/\s|,/g, '');
           if (tagReservation == '취소환불' && reservationNumber) {
-            const cancledFlag = await this.reservationService.cancelReservation(
-              reservationNumber,
-            );
-            return cancledFlag == NOT_YET_CANCELED
-              ? {
-                  phoneNumber: telReservation,
-                  message: '',
-                  reservationNum: reservationNumber,
-                  description: placeReservation,
-                }
-              : undefined;
+            await this.reservationService.cancelReservation(reservationNumber);
+            return undefined;
           }
 
           if (tagReservation == '예약확정') {

@@ -24,7 +24,6 @@ export class ScheduleService {
       const places: Place[] = await this.messageService.getPlacesByQueue(
         host.id,
       );
-
       // 기존 예약 정보중 가장 높은 예약 번호
       let reservationMaxNumOfDb: number =
         (await this.messageService.getMaxReservationNumByQueue(host.id)) ?? 0;
