@@ -16,6 +16,7 @@ model Host {
   aligoKey        String
   aligoSender     String
   status          String @default("U") @db.VarChar(4)
+  accessToken     String @db.VarChar(500)
 
   messageBase MessageBase[]
   place       Place[]
