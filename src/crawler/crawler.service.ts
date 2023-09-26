@@ -92,7 +92,14 @@ export class CrawlerService {
           this.startCrawlingByQueue(places, reservationMaxNumOfDb, updatedHost);
         });
 
-      const { data: datas } = axiosResponse;
+      let datas;
+
+      if (!axiosResponse) {
+        console.log(`${host.spaceCloudEmail} login-started`);
+        return;
+      } else {
+        datas = axiosResponse.data;
+      }
 
       // 가져온 데이터로 파싱 시작.
       /**
