@@ -14,7 +14,7 @@ export class ReservationInfo {
     dateReservationInput: string,
     placeReservationInput: string,
     reservationNumInput: number,
-    priceInput: string,
+    priceInput: number,
   ) {
     this.userName = nameInput;
     this.phoneNumber = phoneNumberInput;

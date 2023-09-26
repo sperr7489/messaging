@@ -53,8 +53,6 @@ export class ReservationService {
       });
     }
 
-    console.log(reservationInfo.dateReservation);
-
     await this.prismaService.reservation.upsert({
       where: { reservationNum: Number(reservationInfo.reservationNum) },
       update: {
@@ -115,6 +113,6 @@ export class ReservationService {
         tagReservation: '취소환불',
       },
     });
-    return;
+    return NOT_YET_CANCELED;
   }
 }
