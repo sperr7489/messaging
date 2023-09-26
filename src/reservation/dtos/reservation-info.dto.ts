@@ -16,37 +16,45 @@ export class ReservationInfo {
     reservationNumInput: number,
     priceInput: string,
   ) {
-    try {
-      const userName =
-        typeof nameInput === 'string' ? nameInput.match(/예약자명(.+)$/) : null;
-      const phoneNumber =
-        typeof phoneNumberInput === 'string'
-          ? phoneNumberInput.match(/전화번호(.+)$/)
-          : null;
+    this.userName = nameInput;
+    this.phoneNumber = phoneNumberInput;
+    this.tagReservation = tagReservationInput;
+    this.dateReservation = dateReservationInput;
+    this.placeDescription = placeReservationInput;
+    this.reservationNum = reservationNumInput;
+    this.price = String(priceInput);
 
-      const tagReservation = tagReservationInput ?? null;
-      const dateReservation =
-        typeof dateReservationInput === 'string'
-          ? dateReservationInput.match(/날짜\/시간(.+)$/)
-          : null;
-      const placeDescription =
-        typeof placeReservationInput === 'string'
-          ? placeReservationInput.match(/예약공간(.+)$/)
-          : null;
+    // try {
+    //   const userName =
+    //     typeof nameInput === 'string' ? nameInput.match(/예약자명(.+)$/) : null;
+    //   const phoneNumber =
+    //     typeof phoneNumberInput === 'string'
+    //       ? phoneNumberInput.match(/전화번호(.+)$/)
+    //       : null;
 
-      const price =
-        typeof priceInput === 'string' ? priceInput.match(/가격(.+)$/) : null;
+    //   const tagReservation = tagReservationInput ?? null;
+    //   const dateReservation =
+    //     typeof dateReservationInput === 'string'
+    //       ? dateReservationInput.match(/날짜\/시간(.+)$/)
+    //       : null;
+    //   const placeDescription =
+    //     typeof placeReservationInput === 'string'
+    //       ? placeReservationInput.match(/예약공간(.+)$/)
+    //       : null;
 
-      this.userName = userName ? userName[1] : '';
-      this.phoneNumber = phoneNumber ? phoneNumber[1] : '';
-      this.tagReservation = tagReservation ?? '';
-      this.dateReservation = dateReservation ? dateReservation[1] : '';
-      this.placeDescription = placeDescription ? placeDescription[1] : '';
-      this.price = price ? price[1] : '';
-      this.reservationNum = reservationNumInput;
-    } catch (error) {
-      console.log(error);
-    }
+    //   const price =
+    //     typeof priceInput === 'string' ? priceInput.match(/가격(.+)$/) : null;
+
+    //   this.userName = userName ? userName[1] : '';
+    //   this.phoneNumber = phoneNumber ? phoneNumber[1] : '';
+    //   this.tagReservation = tagReservation ?? '';
+    //   this.dateReservation = dateReservation ? dateReservation[1] : '';
+    //   this.placeDescription = placeDescription ? placeDescription[1] : '';
+    //   this.price = price ? price[1] : '';
+    //   this.reservationNum = reservationNumInput;
+    // } catch (error) {
+    //   console.log(error);
+    // }
   }
   displayInfo(): void {
     console.log(
