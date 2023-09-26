@@ -169,7 +169,6 @@ export class CrawlerService {
                 reservationNumber,
                 price,
               );
-              reservation.displayInfo();
               let place = places.find(
                 (place) => place.description == placeReservation,
               );
