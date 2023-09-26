@@ -125,6 +125,8 @@ export class CrawlerService {
           }
 
           const telReservation = reservation.user_info.contact ?? '0'; // 전화번호
+          console.log(telReservation);
+
           const reservationNumber = reservation.id; // 예약번호
           const placeReservation = // 장소 이름
             (
@@ -189,14 +191,12 @@ export class CrawlerService {
                 reservation,
                 place.id,
               );
-              // sms 메시지 로직
-              const phoneNumber = reservation.phoneNumber.replace(/-/g, '');
 
               return {
-                phoneNumber: phoneNumber,
+                phoneNumber: telReservation,
                 message: place.message,
                 description: place.description,
-                reservationNum: reservation.reservationNum,
+                reservationNum: reservationNumber,
               };
             }
           }
