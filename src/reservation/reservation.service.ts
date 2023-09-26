@@ -53,6 +53,8 @@ export class ReservationService {
       });
     }
 
+    console.log(reservationInfo.dateReservation);
+
     await this.prismaService.reservation.upsert({
       where: { reservationNum: Number(reservationInfo.reservationNum) },
       update: {
