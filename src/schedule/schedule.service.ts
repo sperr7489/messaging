@@ -76,7 +76,15 @@ export class ScheduleService {
                 );
               } else {
                 // 개발 단계
-                console.log('Test 단계');
+                // 김기창에 대해서만 메시지 보낼 수 있도록 하는 것.
+                if (messageInfo.phoneNumber == '01024087489') {
+                  await this.aligoService.sendSMS(
+                    messageInfo.phoneNumber,
+                    `${messageInfo.message}`,
+                    host,
+                  );
+                }
+                console.log('develop stage');
               }
             }
           }),
