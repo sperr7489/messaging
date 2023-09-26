@@ -8,6 +8,7 @@ export class HostDto implements Host {
   aligoKey: string;
   aligoSender: string;
   status: string;
+  accessToken: string;
 
   constructor(option: {
     id: number;
@@ -17,6 +18,7 @@ export class HostDto implements Host {
     aligoKey: string;
     aligoSender: string;
     status: string;
+    accessToken: string;
   }) {
     this.id = option.id;
     this.spaceCloudEmail = option.spaceCloudEmail;
@@ -25,5 +27,6 @@ export class HostDto implements Host {
     this.aligoKey = option.aligoKey;
     this.aligoSender = option.aligoSender;
     this.status = option.status;
+    this.accessToken = option.accessToken;
   }
 }

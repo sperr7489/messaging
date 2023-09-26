@@ -29,7 +29,11 @@ export class ScheduleService {
       let reservationMaxNumOfDb: number =
         (await this.messageService.getMaxReservationNumByQueue(host.id)) ?? 0;
 
-      console.log('reservationMaxNumOfDb : ' + reservationMaxNumOfDb);
+      console.log(
+        'spaceCloudEmail : ',
+        host.spaceCloudEmail,
+        ', reservationMaxNumOfDb : ' + reservationMaxNumOfDb,
+      );
 
       // 처음 실행했을 때 스페이스클라우드의 데이터를 긁어온다.
       let messageInfos: MessageDto[] =
