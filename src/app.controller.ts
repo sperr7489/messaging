@@ -31,7 +31,7 @@ export class AppController {
     return waitingJobs;
   }
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_HOUR)
   @Post('start-queue-message')
   async queueHosts() {
     return await this.hostQueueService.startQueueMessage();
