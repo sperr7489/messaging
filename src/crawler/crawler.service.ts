@@ -43,13 +43,13 @@ export class CrawlerService {
       });
       page = await browser.newPage();
 
-      await page.goto(this.SPACE_URL, { waitUntil: 'domcontentloaded' });
-      const userEmail = SPACE_EMAIL;
-      const passWord = SPACE_PASSWORD;
+      // await page.goto(this.SPACE_URL, { waitUntil: 'domcontentloaded' });
+      // const userEmail = SPACE_EMAIL;
+      // const passWord = SPACE_PASSWORD;
 
-      // 아이디와 비밀번호 입력
-      await page.type('#email', userEmail); // 실제 웹사이트에 맞게 셀렉터 수정 필요
-      await page.type('#pw', passWord); // 실제 웹사이트에 맞게 셀렉터 수정 필요
+      // // 아이디와 비밀번호 입력
+      // await page.type('#email', userEmail); // 실제 웹사이트에 맞게 셀렉터 수정 필요
+      // await page.type('#pw', passWord); // 실제 웹사이트에 맞게 셀렉터 수정 필요
       // await this.login(host, page);
       /**
        * 1. 로그인 로직에 대한 수정이 필요해보임.
