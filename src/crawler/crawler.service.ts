@@ -1,13 +1,8 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Host, Place } from '@prisma/client';
-import puppeteer, { Browser, ElementHandle, Page } from 'puppeteer';
-import { AligoService } from 'src/aligo-sms/aligo-sms.service';
+import { Place } from '@prisma/client';
 import { HostDto } from 'src/host-queue/dtos/host.dto';
 import { MessageDto } from 'src/message/dtos/message.dto';
-import { MessageService } from 'src/message/message.service';
-import { NOT_YET_CANCELED } from 'src/reservation/constants/reservation.constant';
 import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
 import { ReservationService } from 'src/reservation/reservation.service';
 import axios from 'axios';
