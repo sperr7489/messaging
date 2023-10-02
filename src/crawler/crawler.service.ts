@@ -1,13 +1,8 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Host, Place } from '@prisma/client';
-import puppeteer, { Browser, ElementHandle, Page } from 'puppeteer';
-import { AligoService } from 'src/aligo-sms/aligo-sms.service';
+import { Place } from '@prisma/client';
 import { HostDto } from 'src/host-queue/dtos/host.dto';
 import { MessageDto } from 'src/message/dtos/message.dto';
-import { MessageService } from 'src/message/message.service';
-import { NOT_YET_CANCELED } from 'src/reservation/constants/reservation.constant';
 import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
 import { ReservationService } from 'src/reservation/reservation.service';
 import axios from 'axios';
@@ -29,19 +24,17 @@ export class CrawlerService {
     reservationMaxNumOfDb: number,
     host: HostDto,
   ): Promise<MessageDto[]> {
-    let browser: Browser | undefined;
-    let page: Page;
+    // let browser: Browser | undefined;
+    // let page: Page;
 
     try {
       const hostDto = host;
-      const SPACE_EMAIL = host.spaceCloudEmail;
-      const SPACE_PASSWORD = host.spaceCloudPw;
-      browser = await puppeteer.launch({
-        headless: 'new',
-        // headless: false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-      page = await browser.newPage();
+      // browser = await puppeteer.launch({
+      //   headless: 'new',
+      //   // headless: false,
+      //   args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      // });
+      // page = await browser.newPage();
 
       // await page.goto(this.SPACE_URL, { waitUntil: 'domcontentloaded' });
       // const userEmail = SPACE_EMAIL;
@@ -87,7 +80,7 @@ export class CrawlerService {
           axiosResponse = response;
         })
         .catch(async (e) => {
-          const updatedHost: HostDto = await this.login(hostDto, page);
+          const updatedHost: HostDto = await this.login(hostDto);
           // 해당 부분은 accessToken이 일치하지 않을때이다.
           this.startCrawlingByQueue(places, reservationMaxNumOfDb, updatedHost);
         });
@@ -317,8 +310,8 @@ export class CrawlerService {
     } catch (error) {
       console.error(error);
     } finally {
-      if (page) await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
-      if (browser) await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
+      // if (page) await page.close(); // 페이지를 닫습니다. 페이지 관련 리소스가 해제됩니다.
+      // if (browser) await browser.close(); // 브라우저를 닫습니다. 브라우저 관련 리소스가 해제됩니다.
     }
   }
 
@@ -334,8 +327,8 @@ export class CrawlerService {
     );
   }
 
-  async login(host: HostDto, page: Page): Promise<HostDto> {
-    await page.goto(this.SPACE_URL, { waitUntil: 'domcontentloaded' });
+  async login(host: HostDto): Promise<HostDto> {
+    // await page.goto(this.SPACE_URL, { waitUntil: 'domcontentloaded' });
     // await page.type('#email', SPACE_EMAIL); // 실제 웹사이트에 맞게 셀렉터 수정 필요
     // await page.type('#pw', SPACE_PASSWORD); // 실제 웹사이트에 맞게 셀렉터 수정 필요
 
@@ -358,22 +351,22 @@ export class CrawlerService {
           where: { id: host.id },
         });
       })
-      .catch((e) => console.log('회원정보가 틀렸습니다.'));
+      .catch((e) => console.log('not authenticated'));
 
     return updatedHost;
   }
 
-  async getInfoAboutReservation(
-    node: ElementHandle<HTMLElement>,
-    querySelector: string,
-  ) {
-    const element = await node.$(`.${querySelector}`);
+  // async getInfoAboutReservation(
+  //   node: ElementHandle<HTMLElement>,
+  //   querySelector: string,
+  // ) {
+  //   const element = await node.$(`.${querySelector}`);
 
-    if (element) {
-      const text = await element.evaluate((v) => v.textContent);
-      return text;
-    } else {
-      console.log(`Element not found for selector ${querySelector}`);
-    }
-  }
+  //   if (element) {
+  //     const text = await element.evaluate((v) => v.textContent);
+  //     return text;
+  //   } else {
+  //     console.log(`Element not found for selector ${querySelector}`);
+  //   }
+  // }
 }
