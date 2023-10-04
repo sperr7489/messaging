@@ -69,30 +69,40 @@ export class CrawlerService {
       //   waitUntil: 'domcontentloaded',
       // });
 
-      let axiosResponse;
-      await axios
-        .get('https://new-api.spacecloud.kr/partner/reservations', {
-          headers: {
-            Authorization: host.accessToken,
-          },
-        })
-        .then((response) => {
-          axiosResponse = response;
-        })
-        .catch(async (e) => {
-          const updatedHost: HostDto = await this.login(hostDto);
-          // 해당 부분은 accessToken이 일치하지 않을때이다.
-          this.startCrawlingByQueue(places, reservationMaxNumOfDb, updatedHost);
-        });
+      const reservations = await this.getReservations(
+        host,
+        1,
+        reservationMaxNumOfDb,
+        [],
+      );
+      // console.log(`recursiveResult : ${recursiveResult.length}`);
+      // console.log('이곳이다!', JSON.stringify(`${recursiveResult}`, null, 2));
 
-      let datas;
+      // let axiosResponse;
+      // await axios
+      //   .get('https://new-api.spacecloud.kr/partner/reservations?page=', {
+      //     headers: {
+      //       Authorization: host.accessToken,
+      //     },
+      //   })
+      //   .then((response) => {
+      //     axiosResponse = response;
+      //   })
+      //   .catch(async (e) => {
+      //     const updatedHost: HostDto = await this.login(hostDto);
+      //     // 해당 부분은 accessToken이 일치하지 않을때이다.
+      //     this.startCrawlingByQueue(places, reservationMaxNumOfDb, updatedHost);
+      //   });
 
-      if (!axiosResponse) {
-        console.log(`${host.spaceCloudEmail} login-started`);
-        return;
-      } else {
-        datas = axiosResponse.data;
-      }
+      // let datas;
+
+      // if (!axiosResponse) {
+      //   console.log(`${host.spaceCloudEmail} login-started`);
+      //   return;
+      // } else {
+      //   datas = axiosResponse.data;
+      //   // console.log(JSON.stringify(datas, null, 2));
+      // }
 
       // 가져온 데이터로 파싱 시작.
       /**
@@ -107,7 +117,7 @@ export class CrawlerService {
        */
 
       const result: MessageDto[] = await Promise.all(
-        datas.reservations.map(async (reservation) => {
+        reservations.map(async (reservation) => {
           let tagReservation;
           if (reservation.PAY_STAT_CD == 'REFND') {
             tagReservation = '취소환불';
@@ -356,17 +366,49 @@ export class CrawlerService {
     return updatedHost;
   }
 
-  // async getInfoAboutReservation(
-  //   node: ElementHandle<HTMLElement>,
-  //   querySelector: string,
-  // ) {
-  //   const element = await node.$(`.${querySelector}`);
+  async getReservations(
+    host: HostDto,
+    page: number,
+    reservationMaxNumOfDb: number,
+    result: any[],
+  ): Promise<any[]> {
+    try {
+      const {
+        data: { reservations },
+      } = await axios.get(
+        `https://new-api.spacecloud.kr/partner/reservations?page=${page}`,
+        {
+          headers: {
+            Authorization: host.accessToken,
+          },
+        },
+      );
+      const minReservation = reservations.reduce((prev, curr) => {
+        return prev.id < curr.id ? prev : curr;
+      });
+      result.push(...reservations);
+      if (minReservation.id > reservationMaxNumOfDb) {
+        // 예약 정보중에 가장 예약번호가 작은 것보다 reservationMaxNumOfDb가 작다면 다음 페이지도 조회해바야한다.
+        await this.getReservations(host, ++page, reservationMaxNumOfDb, result);
+      }
+      return result;
+      // console.log('이곳이다!', JSON.stringify(minReservation, null, 2));
+    } catch (error: any) {
+      //로그인이 실패한 경우
+      if (error.response && error.response.status === 401) {
+        const updatedHost: HostDto = await this.login(host);
+        // 해당 부분은 accessToken이 일치하지 않을때이다.
+        return this.getReservations(
+          updatedHost,
+          page,
+          reservationMaxNumOfDb,
+          [],
+        );
+        // 새로운 accessToken을 가져와 host 객체를 업데이트합니다.
 
-  //   if (element) {
-  //     const text = await element.evaluate((v) => v.textContent);
-  //     return text;
-  //   } else {
-  //     console.log(`Element not found for selector ${querySelector}`);
-  //   }
-  // }
+        // 같은 함수를 재호출합니다.
+      }
+      throw error; // 다른 오류를 다시 던집니다.
+    }
+  }
 }

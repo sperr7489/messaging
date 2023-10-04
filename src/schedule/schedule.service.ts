@@ -41,6 +41,7 @@ export class ScheduleService {
           reservationMaxNumOfDb,
           host,
         )) || [];
+      // console.log('이곳이다!', JSON.stringify(messageInfos, null, 2));
 
       if (messageInfos.length > 0) {
         // 메시지 보낼 사람이 추가적으로 존재한다면 다음과 같은 절차 진행
