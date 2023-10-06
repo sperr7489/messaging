@@ -1,26 +1,25 @@
+import { UserDto } from '../../crawler/dtos/user.dto';
+import { SpaceDto } from '../../crawler/dtos/space.dto';
 export class ReservationInfo {
-  userName?: string;
-  phoneNumber?: string;
+  user: UserDto;
   tagReservation?: string;
   dateReservation?: string;
-  placeDescription?: string;
+  spaceDto: SpaceDto;
   reservationNum?: number;
   price?: string;
 
   constructor(
-    nameInput: string,
-    phoneNumberInput: string,
+    user: UserDto,
     tagReservationInput: string,
     dateReservationInput: string,
-    placeReservationInput: string,
+    spaceDto: SpaceDto,
     reservationNumInput: number,
     priceInput: number,
   ) {
-    this.userName = nameInput;
-    this.phoneNumber = phoneNumberInput;
+    this.user = user;
     this.tagReservation = tagReservationInput;
     this.dateReservation = dateReservationInput;
-    this.placeDescription = placeReservationInput;
+    this.spaceDto = spaceDto;
     this.reservationNum = reservationNumInput;
     this.price = String(priceInput);
   }

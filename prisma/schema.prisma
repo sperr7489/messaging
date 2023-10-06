@@ -25,7 +25,7 @@ model Host {
 
 model Reservation {
   id              Int     @id @default(autoincrement())
-  userId          Int?
+  userId          String?
   reservationNum  Int     @unique
   tagReservation  String
   dateReservation String?
@@ -43,10 +43,10 @@ model Reservation {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
+  id           String           @id 
   userName     String
   phoneNumber  String
-  usedCount    Int           @default(0)
+  usedCount    Int?          @default(1)
   reservations Reservation[]
 }
 
@@ -76,13 +76,13 @@ model Place {
 model Space {
   id       Int     @id
   name     String  @db.VarChar(100)
-  imageUrl String  @db.VarChar(1000)
-  isPublic String  @default("Y") @db.VarChar(4) // Y는 공개 N은 비공개 
+  imageUrl String?  @db.VarChar(1000)
+  isPublic String?  @default("Y") @db.VarChar(4) // Y는 공개 N은 비공개 
   message  String? @db.VarChar(2000)
   hostId   Int
 
-  registedAt DateTime @db.Timestamp(0) // 스클에 등록된 날짜 
-  createdAt  DateTime @default(now()) @db.Timestamp(0) // 디비에 등록된 날짜
+  registedAt DateTime? @db.Timestamp(0) // 스클에 등록된 날짜 
+  createdAt  DateTime? @default(now()) @db.Timestamp(0) // 디비에 등록된 날짜
 
   host         Host          @relation(fields: [hostId], references: [id])
   reservations Reservation[]

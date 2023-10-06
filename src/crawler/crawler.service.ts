@@ -12,6 +12,12 @@ import { async } from 'rxjs';
 import { HostStatus } from 'src/constants/host-status.constant';
 import { SpaceDto } from './dtos/space.dto';
 import { ProductDto } from './dtos/product.dto';
+import { UserDto } from './dtos/user.dto';
+import {
+  UPDATE_CANCELED,
+  OK_RESERVATION,
+} from '../reservation/constants/reservation.constant';
+import { CrawlDto } from '../message/dtos/crawl.dto';
 
 @Injectable()
 export class CrawlerService {
@@ -21,10 +27,10 @@ export class CrawlerService {
     private readonly prismaService: PrismaService,
   ) {}
   async crawlingReservationInfosByQueue(
-    places: Place[],
+    spaces: SpaceDto[],
     reservationMaxNumOfDb: number,
     host: HostDto,
-  ): Promise<MessageDto[]> {
+  ): Promise<CrawlDto[]> {
     try {
       const reservations = await this.getReservations(
         host,
@@ -45,7 +51,7 @@ export class CrawlerService {
        * 7. 가격 정보
        */
 
-      const result: MessageDto[] = await Promise.all(
+      const result: CrawlDto[] = await Promise.all(
         reservations.map(async (reservation) => {
           let tagReservation;
           if (reservation.PAY_STAT_CD == 'REFND') {
@@ -55,66 +61,103 @@ export class CrawlerService {
           } else {
             tagReservation = '예약확정';
           }
+          // console.log('이곳이다!', JSON.stringify(reservation, null, 2));
 
-          const telReservation = reservation.user_info.contact ?? '0'; // 전화번호
+          // const telReservation = reservation.user_info.contact ?? '0'; // 전화번호
+
+          // const placeReservation = // 장소 이름
+          //   (
+          //     reservation.space.space_name + reservation.space.product_name
+          //   ).replace(/\s|,/g, '');
 
           const reservationNumber = reservation.id; // 예약번호
-          const placeReservation = // 장소 이름
-            (
-              reservation.space.space_name + reservation.space.product_name
-            ).replace(/\s|,/g, '');
-          if (tagReservation == '취소환불' && reservationNumber) {
-            await this.reservationService.cancelReservation(reservationNumber);
-            return undefined;
+
+          const dateReservation = // 이용 시간
+            reservation.start_ymd +
+            ' ' +
+            reservation.start_hour +
+            '시 ~ ' +
+            reservation.end_ymd +
+            ' ' +
+            reservation.end_hour +
+            '시';
+
+          const price = reservation.total_price;
+
+          const { user_info } = reservation;
+          const user: UserDto = {
+            id: user_info.id,
+            userName: user_info.name,
+            phoneNumber: user_info.contact,
+          };
+
+          const { space } = reservation;
+          const spaceReservation: SpaceDto = {
+            id: space.id,
+            name: space.space_name,
+            hostId: host.id,
+          };
+
+          const reservationInfo = new ReservationInfo(
+            user,
+            tagReservation,
+            dateReservation,
+            spaceReservation,
+            reservationNumber,
+            price,
+          );
+
+          if (tagReservation == '취소환불') {
+            const cancelFlag = await this.reservationService.cancelReservation(
+              reservationNumber,
+            );
+            return cancelFlag == UPDATE_CANCELED
+              ? {
+                  user: user,
+                  space: spaceReservation,
+                  reservationNum: reservationNumber,
+                  reservationTag: UPDATE_CANCELED,
+                }
+              : undefined;
           }
 
-          if (tagReservation == '예약확정') {
-            const dateReservation = // 이용 시간
-              reservation.start_ymd +
-              ' ' +
-              reservation.start_hour +
-              '시 ~ ' +
-              reservation.end_ymd +
-              ' ' +
-              reservation.end_hour +
-              '시';
-
-            const price = reservation.total_price;
-            const nameReservation = reservation.user_info.name;
-
+          if ((tagReservation = '예약확정')) {
+            // reservationMaxNumOfDb보다 reservationNumber가 큰것에 대해서만 메시지를 보내주면 된다.
             if (reservationNumber > reservationMaxNumOfDb) {
-              const reservation = new ReservationInfo(
-                nameReservation,
-                telReservation,
-                tagReservation,
-                dateReservation,
-                placeReservation,
-                reservationNumber,
-                price,
-              );
-              let place = places.find(
-                (place) => place.description == placeReservation,
-              );
+              // let place = places.find(
+              //   (place) => place.description == placeReservation,
+              // );
 
-              // 디비에 없는 장소면 추가 저장
-              if (!place) {
-                place = await this.reservationService.createPlace(
-                  placeReservation,
-                  host,
+              const spaceId = spaceReservation.id;
+
+              let space: SpaceDto = spaces.find((space) => space.id == spaceId);
+
+              if (!space) {
+                // space가 디비에 없기에 해당 space에대한 정보와 products 정보들까지 모두 입력한다.
+                space = await axios.post(
+                  `http://localhost:3100/space/${spaceId}`,
+                  {
+                    host,
+                  },
                 );
               }
 
+              // 디비에 없는 장소면 추가 저장
+              // if (!place) {
+              //   place = await this.reservationService.createPlace(
+              //     placeReservation,
+              //     host,
+              //   );
+              // }
+
               // 예약 정보 수정
-              await this.reservationService.postReservation(
-                reservation,
-                place.id,
-              );
+              await this.reservationService.postReservation(reservationInfo);
 
               return {
-                phoneNumber: telReservation,
-                message: place.message,
-                description: place.description,
+                user: user,
+                space: spaceReservation,
                 reservationNum: reservationNumber,
+                reservationTag: OK_RESERVATION,
               };
             }
           }
@@ -128,12 +171,12 @@ export class CrawlerService {
   }
 
   async startCrawlingByQueue(
-    places: Place[],
+    spaces: SpaceDto[],
     reservationMaxNumOfDb: number,
     host: HostDto,
   ) {
     return await this.crawlingReservationInfosByQueue(
-      places,
+      spaces,
       reservationMaxNumOfDb,
       host,
     );
@@ -142,6 +185,42 @@ export class CrawlerService {
   async login(host: HostDto): Promise<HostDto> {
     try {
       return await SING_IN(host, this.prismaService);
+    } catch (error) {
+      console.error('not authenticated');
+    }
+  }
+
+  // 여러 user 정보들을 업데이트 시킨다.
+  async upsertUsersInfo(users: UserDto[]) {
+    try {
+      return await Promise.all(
+        users.map(async (user) => {
+          const data = await this.prismaService.user.findFirst({
+            where: {
+              id: user.id,
+            },
+          });
+
+          // 한 번이라도 유의미한 예약을 감지했었다면 등록하도록 한다.
+
+          if (!data) {
+            return await this.prismaService.user.create({
+              data: user,
+            });
+          }
+
+          return await this.prismaService.user.update({
+            where: {
+              id: user.id,
+            },
+            data: {
+              usedCount: {
+                increment: user.usedCount,
+              },
+            },
+          });
+        }),
+      );
     } catch (error) {
       console.error('not authenticated');
     }
@@ -166,6 +245,7 @@ export class CrawlerService {
         // 예약 정보중에 가장 예약번호가 작은 것보다 reservationMaxNumOfDb가 작다면 다음 페이지도 조회해바야한다.
         await this.getReservations(host, ++page, reservationMaxNumOfDb, result);
       }
+      // console.log('이곳이다!', JSON.stringify(result, null, 2));
       return result;
       // console.log('이곳이다!', JSON.stringify(minReservation, null, 2));
     } catch (error: any) {
@@ -241,13 +321,18 @@ export class CrawlerService {
       });
 
       return { spaceId, products };
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        const updatedHost: HostDto = await this.login(host);
+        // 해당 부분은 accessToken이 일치하지 않을때이다.
+        return this.getProductsBySpaceId(updatedHost, spaceId);
+      }
       console.error(error);
       return error;
     }
   }
-  // 특정 host의 space들이 갖고 있는 products들 가져오기
 
+  // 특정 host의 space들이 갖고 있는 products들 가져오기
   async getProductsByHostId(host: HostDto) {
     try {
       const spaces = await this.getSpacesByHostId(host);
@@ -277,5 +362,56 @@ export class CrawlerService {
       data: products,
       skipDuplicates: true,
     });
+  }
+
+  // 특정 space에 대한 정보 입력하기
+  async postSpaceById(spaceId: number, host: HostDto) {
+    const API_URL = `https://new-api.spacecloud.kr/partner/spaces/${spaceId}`;
+    try {
+      const { data } = await axios.get(API_URL, {
+        headers: {
+          Authorization: host.accessToken,
+        },
+      });
+      const space: SpaceDto = {
+        id: data.id,
+        name: data.basic_info.name,
+        hostId: host.id,
+        imageUrl: data.basic_info.image_url,
+        registedAt: data.basic_info.REG_YMDT,
+        isPublic: data.basic_info.EXPS_YN,
+      };
+
+      // space 정보 입력
+      const spaceDto: SpaceDto = await this.prismaService.space.create({
+        data: space,
+      });
+
+      const products = await this.getProductsBySpaceId(host, space.id);
+      const productDtos: ProductDto[] = products
+        .map((space: any) => {
+          return space.products.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            isPublic: product.exposed,
+            registedAt: product.registration_date,
+            spaceId: space.spaceId,
+          }));
+        })
+        .flat();
+
+      // space에 연관된 products도 입력
+      await this.postProductsOfSpace(productDtos);
+
+      return spaceDto;
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        const updatedHost: HostDto = await this.login(host);
+        // 해당 부분은 accessToken이 일치하지 않을때이다.
+        return this.postSpaceById(spaceId, updatedHost);
+      }
+      console.error(error);
+      return error;
+    }
   }
 }

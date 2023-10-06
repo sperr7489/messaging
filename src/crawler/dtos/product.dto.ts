@@ -1,4 +1,4 @@
-import { Product, Space } from '@prisma/client';
+import { Product } from '@prisma/client';
 
 export class ProductDto implements Product {
   id: number;

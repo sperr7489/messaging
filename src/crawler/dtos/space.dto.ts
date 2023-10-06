@@ -1,14 +1,14 @@
 import { Space } from '@prisma/client';
 
-export class SpaceDto implements Space {
+export class SpaceDto {
   id: number;
   name: string;
-  imageUrl: string;
-  isPublic: string;
-  message: string | null;
+  imageUrl?: string;
+  isPublic?: string;
+  message?: string | null;
   hostId: number;
-  registedAt: Date;
-  createdAt: Date;
+  registedAt?: Date;
+  createdAt?: Date;
   constructor(option: {
     id: number;
     name: string;

@@ -82,19 +82,32 @@ export class CrawlerController {
   // 특정 호스트의 space들 입력하기
   @Post('host/:id/spaces')
   async postSpaceOfHost(@Param('id', new ParseIntPipe()) id: number) {
-    const spaces = await this.getSpacesByHostId(id);
-    const spaceDtos: SpaceDto[] = spaces.map((space: any) => {
-      return {
-        id: space.id,
-        name: space.name,
-        imageUrl: space.image_url,
-        isPublic: space.EXPS_YN,
-        registedAt: space.REG_YMDT,
-        hostId: id,
-      };
-    });
-    // return spaceDtos;
-    return await this.crawlerService.postSpaceOfHost(spaceDtos);
+    try {
+      const host = await this.prismaService.host.findFirstOrThrow({
+        where: {
+          id,
+          status: HostStatus.USE,
+        },
+      });
+      const spaces = await this.getSpacesByHostId(id);
+
+      const spaceDtos: SpaceDto[] = spaces.map((space: any) => {
+        return {
+          id: space.id,
+          name: space.name,
+          imageUrl: space.image_url,
+          isPublic: space.EXPS_YN,
+          message: `${space.name}을 찾아주셔서 감사합니다. 안내 문자가 아닌 경우 ${host.aligoSender}로 연락주세요`,
+          registedAt: space.REG_YMDT,
+          hostId: id,
+        };
+      });
+      // return spaceDtos;
+      return await this.crawlerService.postSpaceOfHost(spaceDtos);
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
   }
 
   // 특정 호스트의 space들의 products 입력하기
@@ -131,5 +144,15 @@ export class CrawlerController {
         await this.postProductsOfSpace(host.id);
       }),
     );
+  }
+
+  // 특정 space에 대한 정보 입력하기 ( 크롤링 시에 처음 발견한 space의 경우 )
+  @Post('/space/:id')
+  async postSpaceById(
+    @Param('id', new ParseIntPipe()) id: number,
+    host: HostDto,
+  ): Promise<SpaceDto> {
+    // 스페이스 정보 입력하기,
+    return await this.crawlerService.postSpaceById(id, host);
   }
 }
