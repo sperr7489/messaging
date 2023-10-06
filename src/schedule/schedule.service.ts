@@ -107,22 +107,22 @@ export class ScheduleService {
               //   host,
               // );
 
+              const message =
+                crawlInfo.space.message ??
+                `${crawlInfo.space.name}를 찾아주셔서 감사합니다. \n안내 문자가 아닌 경우 ${host.aligoSender}로 연락주세요!`;
+
               if (NODE_ENV == 'production') {
                 // 배포단계
                 await this.aligoService.sendSMS(
                   crawlInfo.user.phoneNumber,
-                  `${crawlInfo.space.message}`,
+                  message,
                   host,
                 );
               } else {
                 // 개발 단계
                 // 김기창에 대해서만 메시지 보낼 수 있도록 하는 것.
                 // if (crawlInfo.user.phoneNumber == '01024087489') {
-                await this.aligoService.sendSMS(
-                  '01024087489',
-                  `${crawlInfo.space.message}`,
-                  host,
-                );
+                await this.aligoService.sendSMS('01024087489', message, host);
                 // }
                 console.log('develop stage');
               }
