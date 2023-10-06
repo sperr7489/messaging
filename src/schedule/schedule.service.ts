@@ -6,6 +6,17 @@ import { CrawlerService } from 'src/crawler/crawler.service';
 import { HostDto } from 'src/host-queue/dtos/host.dto';
 import { MessageDto } from 'src/message/dtos/message.dto';
 import { MessageService } from 'src/message/message.service';
+import { SpaceDto } from '../crawler/dtos/space.dto';
+import { CrawlDto } from '../message/dtos/crawl.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserDto } from '../crawler/dtos/user.dto';
+import { NOT_EXIST } from '../constants/space-update-constant';
+import { async } from 'rxjs';
+import {
+  OK_RESERVATION,
+  UPDATE_CANCELED,
+} from '../reservation/constants/reservation.constant';
+import axios from 'axios';
 
 @Injectable()
 export class ScheduleService {
@@ -18,12 +29,15 @@ export class ScheduleService {
 
   async runScheduledTaskQueue(host: HostDto) {
     const NODE_ENV = this.configService.get<string>('NODE_ENV');
+    const BAROLIGO_SERVER = this.configService.get<string>('BAROLIGO_SERVER');
+
     // 여기에 주기적으로 실행할 로직을 작성합니다.
     // 예: 다른 API를 요청하는 코드
     try {
-      const places: Place[] = await this.messageService.getPlacesByQueue(
+      const spaces: SpaceDto[] = await this.messageService.getSpacesByHostId(
         host.id,
       );
+
       // 기존 예약 정보중 가장 높은 예약 번호
       let reservationMaxNumOfDb: number =
         (await this.messageService.getMaxReservationNumByQueue(host.id)) ?? 0;
@@ -35,53 +49,78 @@ export class ScheduleService {
       );
 
       // 처음 실행했을 때 스페이스클라우드의 데이터를 긁어온다.
-      let messageInfos: MessageDto[] =
+      let crawlInfos: CrawlDto[] =
         (await this.crawlerService.startCrawlingByQueue(
-          places,
+          spaces,
           reservationMaxNumOfDb,
           host,
         )) || [];
-      // console.log('이곳이다!', JSON.stringify(messageInfos, null, 2));
+      // console.log('이곳이다!', JSON.stringify(crawlInfos, null, 2));
 
-      if (messageInfos.length > 0) {
-        // 메시지 보낼 사람이 추가적으로 존재한다면 다음과 같은 절차 진행
-        /**
-         * 1.해당 유저들에게 메시지를 보낸다.
-         * 2.최신화된 reservation의 테이블의 reserVationNum의 최댓값으로
-         * messageBase의 테이블을 업데이트한다.
-         */
-        // 1번 메시지 보내는 로직
+      if (crawlInfos.length > 0) {
+        // user들의 정보
+        const users: UserDto[] = crawlInfos.reduce(
+          (acc: UserDto[], curr: CrawlDto) => {
+            const found: UserDto = acc.find((u) => u.id === curr.user.id);
+            if (found) {
+              found.usedCount += curr.reservationTag;
+            } else {
+              acc.push({ ...curr.user, usedCount: curr.reservationTag });
+            }
+            return acc;
+          },
+          [],
+        );
+        await this.crawlerService.upsertUsersInfo(users);
+
+        const notExistSpaces: SpaceDto[] = crawlInfos.reduce(
+          (acc: SpaceDto[], curr: CrawlDto) => {
+            const found: SpaceDto = acc.find((u) => u.id === curr.space.id);
+            if (!found && curr.spaceExists === NOT_EXIST) {
+              return [...acc, curr.space];
+            }
+            return acc;
+          },
+          [],
+        );
+        await Promise.all(
+          notExistSpaces.map(async (space) => {
+            await axios.post(`${BAROLIGO_SERVER}/space/${space.id}`, {
+              host,
+            });
+          }),
+        );
 
         await Promise.all(
-          messageInfos.map(async (messageInfo) => {
-            if (messageInfo.message) {
+          crawlInfos.map(async (crawlInfo) => {
+            if (crawlInfo.reservationTag === OK_RESERVATION) {
               // 취소환불된 것에는 보내지 않게 하기 위함.
               console.log(
                 `${JSON.stringify(host)}, ${new Date()} : , ${
-                  messageInfo.reservationNum
-                }, ${messageInfo.phoneNumber}`,
+                  crawlInfo.reservationNum
+                }, ${crawlInfo.user.phoneNumber}`,
               );
 
               // await this.aligoService.sendSMS(
               //   '01024087489',
-              //   `${messageInfo.message}`,
+              //   `${crawlInfo.message}`,
               //   host,
               // );
 
               if (NODE_ENV == 'production') {
                 // 배포단계
                 await this.aligoService.sendSMS(
-                  messageInfo.phoneNumber,
-                  `${messageInfo.message}`,
+                  crawlInfo.user.phoneNumber,
+                  `${crawlInfo.space.message}`,
                   host,
                 );
               } else {
                 // 개발 단계
                 // 김기창에 대해서만 메시지 보낼 수 있도록 하는 것.
-                if (messageInfo.phoneNumber == '01024087489') {
+                if (crawlInfo.user.phoneNumber == '01024087489') {
                   await this.aligoService.sendSMS(
-                    messageInfo.phoneNumber,
-                    `${messageInfo.message}`,
+                    crawlInfo.user.phoneNumber,
+                    `${crawlInfo.space.message}`,
                     host,
                   );
                 }
@@ -92,7 +131,7 @@ export class ScheduleService {
         );
         //2번
         const reservationMaxNumOfCrawl = Math.max(
-          ...messageInfos.map((v) => {
+          ...crawlInfos.map((v) => {
             return v.reservationNum;
           }),
         );
@@ -109,7 +148,7 @@ export class ScheduleService {
           );
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 }

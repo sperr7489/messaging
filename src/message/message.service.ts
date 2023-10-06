@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Place } from '@prisma/client';
 import { PlaceStatus } from 'src/constants/host-status.constant';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SpaceDto } from '../crawler/dtos/space.dto';
 
 @Injectable()
 export class MessageService {
@@ -56,5 +57,13 @@ export class MessageService {
       ...place,
       description: place.description.replace(/\s|,/g, ''),
     }));
+  }
+
+  // 모든 장소 정보를 가져오기
+  async getSpacesByHostId(hostId: number): Promise<SpaceDto[]> {
+    // [역도보3분]신촌 연습실 제이엔터, C홀 이 있으면 이는 [역도보3분]신촌연습실제이엔터C홀 로 변경된다.
+    const spaces: SpaceDto[] = await this.prismaService.space.findMany();
+
+    return spaces;
   }
 }
