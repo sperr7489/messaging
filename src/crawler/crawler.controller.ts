@@ -1,10 +1,16 @@
-import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { CrawlerService } from './crawler.service';
 import { SpaceDto } from './dtos/space.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { HostStatus } from 'src/constants/host-status.constant';
 import { ProductDto } from './dtos/product.dto';
-import { async } from 'rxjs';
 import { HostDto } from '../host-queue/dtos/host.dto';
 
 @Controller()
@@ -150,9 +156,10 @@ export class CrawlerController {
   @Post('/space/:id')
   async postSpaceById(
     @Param('id', new ParseIntPipe()) id: number,
-    host: HostDto,
+    @Body('host') host: HostDto,
   ): Promise<SpaceDto> {
     // 스페이스 정보 입력하기,
+
     return await this.crawlerService.postSpaceById(id, host);
   }
 }

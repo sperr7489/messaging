@@ -10,10 +10,13 @@ import { SpaceDto } from '../crawler/dtos/space.dto';
 import { CrawlDto } from '../message/dtos/crawl.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from '../crawler/dtos/user.dto';
+import { NOT_EXIST } from '../constants/space-update-constant';
+import { async } from 'rxjs';
 import {
   OK_RESERVATION,
   UPDATE_CANCELED,
 } from '../reservation/constants/reservation.constant';
+import axios from 'axios';
 
 @Injectable()
 export class ScheduleService {
@@ -22,7 +25,6 @@ export class ScheduleService {
     private readonly aligoService: AligoService,
     private readonly messageService: MessageService,
     private readonly configService: ConfigService,
-    private readonly prismaService: PrismaService,
   ) {}
 
   async runScheduledTaskQueue(host: HostDto) {
@@ -68,6 +70,24 @@ export class ScheduleService {
           [],
         );
         await this.crawlerService.upsertUsersInfo(users);
+
+        const notExistSpaces: SpaceDto[] = crawlInfos.reduce(
+          (acc: SpaceDto[], curr: CrawlDto) => {
+            const found: SpaceDto = acc.find((u) => u.id === curr.space.id);
+            if (!found && curr.spaceExists === NOT_EXIST) {
+              return [...acc, curr.space];
+            }
+            return acc;
+          },
+          [],
+        );
+        await Promise.all(
+          notExistSpaces.map(async (space) => {
+            await axios.post(`http://localhost:3100/space/${space.id}`, {
+              host,
+            });
+          }),
+        );
 
         await Promise.all(
           crawlInfos.map(async (crawlInfo) => {

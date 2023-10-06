@@ -26,7 +26,10 @@ export const GET_RESERVATIONS = async (page: number, host: HostDto) => {
     },
   );
 };
-export const SING_IN = async (host: HostDto, prismaService: PrismaService) => {
+export const SING_IN = async (
+  host: HostDto,
+  prismaService: PrismaService,
+): Promise<HostDto> => {
   const SPACE_EMAIL = host.spaceCloudEmail;
   const SPACE_PASSWORD = host.spaceCloudPw;
   let accessToken: string;
@@ -39,10 +42,10 @@ export const SING_IN = async (host: HostDto, prismaService: PrismaService) => {
       .then(async (v) => {
         accessToken = v.data.user.token;
         return await prismaService.host.update({
+          where: { id: host.id },
           data: {
             accessToken,
           },
-          where: { id: host.id },
         });
       });
   } catch (error) {

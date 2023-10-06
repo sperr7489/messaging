@@ -18,11 +18,11 @@ import {
   OK_RESERVATION,
 } from '../reservation/constants/reservation.constant';
 import { CrawlDto } from '../message/dtos/crawl.dto';
+import { ALEADY_EXIST, NOT_EXIST } from '../constants/space-update-constant';
 
 @Injectable()
 export class CrawlerService {
   constructor(
-    private readonly configService: ConfigService,
     private readonly reservationService: ReservationService,
     private readonly prismaService: PrismaService,
   ) {}
@@ -53,7 +53,7 @@ export class CrawlerService {
 
       const result: CrawlDto[] = await Promise.all(
         reservations.map(async (reservation) => {
-          let tagReservation;
+          let tagReservation: string;
           if (reservation.PAY_STAT_CD == 'REFND') {
             tagReservation = '취소환불';
           } else if (reservation.RSV_STAT_CD == 'USEDC') {
@@ -61,14 +61,6 @@ export class CrawlerService {
           } else {
             tagReservation = '예약확정';
           }
-          // console.log('이곳이다!', JSON.stringify(reservation, null, 2));
-
-          // const telReservation = reservation.user_info.contact ?? '0'; // 전화번호
-
-          // const placeReservation = // 장소 이름
-          //   (
-          //     reservation.space.space_name + reservation.space.product_name
-          //   ).replace(/\s|,/g, '');
 
           const reservationNumber = reservation.id; // 예약번호
 
@@ -92,11 +84,22 @@ export class CrawlerService {
           };
 
           const { space } = reservation;
+
           const spaceReservation: SpaceDto = {
             id: space.id,
             name: space.space_name,
             hostId: host.id,
           };
+
+          const spaceId = spaceReservation.id;
+
+          let spaceDto: SpaceDto = spaces.find((space) => space.id == spaceId);
+          let spaceExists: number = ALEADY_EXIST;
+
+          if (!spaceDto) {
+            // space가 디비에 없기에 해당 space에대한 정보와 products 정보들까지 모두 입력한다.
+            spaceExists = NOT_EXIST;
+          }
 
           const reservationInfo = new ReservationInfo(
             user,
@@ -117,6 +120,7 @@ export class CrawlerService {
                   space: spaceReservation,
                   reservationNum: reservationNumber,
                   reservationTag: UPDATE_CANCELED,
+                  spaceExists,
                 }
               : undefined;
           }
@@ -127,20 +131,6 @@ export class CrawlerService {
               // let place = places.find(
               //   (place) => place.description == placeReservation,
               // );
-
-              const spaceId = spaceReservation.id;
-
-              let space: SpaceDto = spaces.find((space) => space.id == spaceId);
-
-              if (!space) {
-                // space가 디비에 없기에 해당 space에대한 정보와 products 정보들까지 모두 입력한다.
-                space = await axios.post(
-                  `http://localhost:3100/space/${spaceId}`,
-                  {
-                    host,
-                  },
-                );
-              }
 
               // 디비에 없는 장소면 추가 저장
               // if (!place) {
@@ -158,6 +148,7 @@ export class CrawlerService {
                 space: spaceReservation,
                 reservationNum: reservationNumber,
                 reservationTag: OK_RESERVATION,
+                spaceExists,
               };
             }
           }
@@ -368,17 +359,24 @@ export class CrawlerService {
   async postSpaceById(spaceId: number, host: HostDto) {
     const API_URL = `https://new-api.spacecloud.kr/partner/spaces/${spaceId}`;
     try {
+      // console.log('이곳이다!', JSON.stringify(host, null, 2));
+
       const { data } = await axios.get(API_URL, {
         headers: {
           Authorization: host.accessToken,
         },
       });
+      const registedAtDate: Date = new Date(
+        data.basic_info.REG_YMDT.replace(' ', 'T') + 'Z',
+      );
+
       const space: SpaceDto = {
         id: data.id,
         name: data.basic_info.name,
         hostId: host.id,
         imageUrl: data.basic_info.image_url,
-        registedAt: data.basic_info.REG_YMDT,
+        message: `${data.basic_info.name}을 찾아주셔서 감사합니다. 안내 문자가 아닌 경우 ${host.aligoSender}로 문자 주세요`,
+        registedAt: registedAtDate,
         isPublic: data.basic_info.EXPS_YN,
       };
 
@@ -387,18 +385,32 @@ export class CrawlerService {
         data: space,
       });
 
-      const products = await this.getProductsBySpaceId(host, space.id);
-      const productDtos: ProductDto[] = products
-        .map((space: any) => {
-          return space.products.map((product: any) => ({
-            id: product.id,
-            name: product.name,
-            isPublic: product.exposed,
-            registedAt: product.registration_date,
-            spaceId: space.spaceId,
-          }));
-        })
-        .flat();
+      const { spaceId, products } = await this.getProductsBySpaceId(
+        host,
+        space.id,
+      );
+
+      const productDtos: ProductDto[] = products.map((product) => {
+        return {
+          id: product.id,
+          name: product.name,
+          isPublic: product.exposed,
+          registedAt: product.registration_date,
+          spaceId: spaceId,
+        };
+      });
+
+      // const productDtos: ProductDto[] = products
+      //   .map((space: any) => {
+      //     return space.products.map((product: any) => ({
+      //       id: product.id,
+      //       name: product.name,
+      //       isPublic: product.exposed,
+      //       registedAt: product.registration_date,
+      //       spaceId: spaceId,
+      //     }));
+      //   })
+      //   .flat();
 
       // space에 연관된 products도 입력
       await this.postProductsOfSpace(productDtos);
@@ -408,6 +420,7 @@ export class CrawlerService {
       if (error.response && error.response.status === 401) {
         const updatedHost: HostDto = await this.login(host);
         // 해당 부분은 accessToken이 일치하지 않을때이다.
+
         return this.postSpaceById(spaceId, updatedHost);
       }
       console.error(error);

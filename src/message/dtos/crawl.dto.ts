@@ -5,4 +5,5 @@ export class CrawlDto {
   space: SpaceDto;
   reservationNum: number;
   reservationTag: number;
+  spaceExists: number;
 }
