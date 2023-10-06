@@ -29,6 +29,8 @@ export class ScheduleService {
 
   async runScheduledTaskQueue(host: HostDto) {
     const NODE_ENV = this.configService.get<string>('NODE_ENV');
+    const BAROLIGO_SERVER = this.configService.get<string>('BAROLIGO_SERVER');
+
     // 여기에 주기적으로 실행할 로직을 작성합니다.
     // 예: 다른 API를 요청하는 코드
     try {
@@ -83,7 +85,7 @@ export class ScheduleService {
         );
         await Promise.all(
           notExistSpaces.map(async (space) => {
-            await axios.post(`http://localhost:3100/space/${space.id}`, {
+            await axios.post(`${BAROLIGO_SERVER}/space/${space.id}`, {
               host,
             });
           }),
