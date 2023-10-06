@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Place } from '@prisma/client';
+import { Place, Host } from '@prisma/client';
 import { HostDto } from 'src/host-queue/dtos/host.dto';
 import { MessageDto } from 'src/message/dtos/message.dto';
 import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
@@ -8,6 +8,10 @@ import { ReservationService } from 'src/reservation/reservation.service';
 import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GET_RESERVATIONS, SING_IN } from 'src/constants/api.requset';
+import { async } from 'rxjs';
+import { HostStatus } from 'src/constants/host-status.constant';
+import { SpaceDto } from './dtos/space.dto';
+import { ProductDto } from './dtos/product.dto';
 
 @Injectable()
 export class CrawlerService {
@@ -28,6 +32,7 @@ export class CrawlerService {
         reservationMaxNumOfDb,
         [],
       );
+
       // 가져온 데이터로 파싱 시작.
       /**
        * 필요한 정보
@@ -138,7 +143,7 @@ export class CrawlerService {
     try {
       return await SING_IN(host, this.prismaService);
     } catch (error) {
-      console.log('not authenticated');
+      console.error('not authenticated');
     }
   }
 
@@ -177,5 +182,100 @@ export class CrawlerService {
       }
       throw error;
     }
+  }
+
+  // 모든 호스트들에 대한 Space 정보 가져오기
+  async getAllSpaces() {
+    try {
+      const hosts: HostDto[] = await this.prismaService.host.findMany({
+        where: {
+          status: HostStatus.USE,
+        },
+      });
+      const res = await Promise.all(
+        hosts.map(async (host) => {
+          const spaces = await this.getSpacesByHostId(host);
+          return { host, spaces };
+        }),
+      );
+      return res;
+    } catch (error) {
+      console.error(`There is ${error}`);
+    }
+  }
+
+  // 특정 호스트에 대한 Space 정보 가져오기
+  async getSpacesByHostId(host: HostDto) {
+    try {
+      const API_URL = 'https://new-api.spacecloud.kr/partner/spaces?all=true';
+
+      const {
+        data: { spaces },
+      } = await axios.get(API_URL, {
+        headers: {
+          Authorization: host.accessToken,
+        },
+      });
+      return spaces;
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        const updatedHost: HostDto = await this.login(host);
+        // 해당 부분은 accessToken이 일치하지 않을때이다.
+        return this.getSpacesByHostId(updatedHost);
+      }
+      console.error(error);
+      return error;
+    }
+  }
+
+  // 특정 Space에 Product 정보 가져오기
+  async getProductsBySpaceId(host: HostDto, spaceId: number) {
+    try {
+      const API_URL = `https://new-api.spacecloud.kr/partner/spaces/${spaceId}/manage_products`;
+      const {
+        data: { products },
+      } = await axios.get(API_URL, {
+        headers: {
+          Authorization: host.accessToken,
+        },
+      });
+
+      return { spaceId, products };
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  }
+  // 특정 host의 space들이 갖고 있는 products들 가져오기
+
+  async getProductsByHostId(host: HostDto) {
+    try {
+      const spaces = await this.getSpacesByHostId(host);
+      const products = await Promise.all(
+        spaces.map(async (space: any) => {
+          return await this.getProductsBySpaceId(host, space.id);
+        }),
+      );
+      return products;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  }
+
+  // 특정 호스트의 space들 입력하기
+  async postSpaceOfHost(spaces: SpaceDto[]) {
+    return await this.prismaService.space.createMany({
+      data: spaces,
+      skipDuplicates: true,
+    });
+  }
+
+  // 특정 호스트의 space들의 products 입력하기
+  async postProductsOfSpace(products: ProductDto[]) {
+    return await this.prismaService.product.createMany({
+      data: products,
+      skipDuplicates: true,
+    });
   }
 }

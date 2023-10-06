@@ -35,7 +35,6 @@ export class HostQueueService {
 
   async getWaitingQueue() {
     const waitingJobs = await this.hostQueue.getWaiting();
-    console.log('waitingJobs :  ', waitingJobs);
 
     return { count: waitingJobs.length, waitingJobs: waitingJobs };
   }

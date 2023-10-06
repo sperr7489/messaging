@@ -46,6 +46,6 @@ export const SING_IN = async (host: HostDto, prismaService: PrismaService) => {
         });
       });
   } catch (error) {
-    console.log('not authenticated');
+    console.error('not authenticated');
   }
 };
