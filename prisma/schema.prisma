@@ -9,15 +9,16 @@ datasource db {
 }
 
 model Host {
-  id              Int    @id @default(autoincrement())
+  id              Int     @id @default(autoincrement())
   spaceCloudEmail String
   spaceCloudPw    String
   aligoId         String
   aligoKey        String
   aligoSender     String
-  status          String @default("U") @db.VarChar(4)
-  accessToken     String? @db.VarChar(500) @default("")
+  status          String  @default("U") @db.VarChar(4)
+  accessToken     String? @default("") @db.VarChar(500)
 
+  space       Space[]
   messageBase MessageBase[]
   place       Place[]
 }
@@ -30,9 +31,13 @@ model Reservation {
   dateReservation String?
   price           String?
   placeId         Int?
-  user            User?   @relation(fields: [userId], references: [id])
-  place           Place?  @relation(fields: [placeId], references: [id])
+  spaceId         Int     @default(0)
 
+  space Space  @relation(fields: [spaceId], references: [id])
+  user  User?  @relation(fields: [userId], references: [id])
+  place Place? @relation(fields: [placeId], references: [id])
+
+  @@index([spaceId])
   @@index([userId])
   @@index([placeId])
 }
@@ -56,13 +61,45 @@ model MessageBase {
 }
 
 model Place {
-  id           Int           @id @default(autoincrement())
-  hostId       Int
-  description  String
-  message      String?       @db.VarChar(2000)
-  reservations Reservation[]
+  id          Int     @id @default(autoincrement())
+  hostId      Int
+  description String
+  message     String? @db.VarChar(2000)
+  status      String  @default("U") @db.VarChar(4)
+
   host         Host          @relation(fields: [hostId], references: [id])
-  status       String        @default("U") @db.VarChar(4)
+  reservations Reservation[]
 
   @@index([hostId])
+}
+
+model Space {
+  id       Int     @id
+  name     String  @db.VarChar(100)
+  imageUrl String  @db.VarChar(1000)
+  isPublic String  @default("Y") @db.VarChar(4) // Y는 공개 N은 비공개 
+  message  String? @db.VarChar(2000)
+  hostId   Int
+
+  registedAt DateTime @db.Timestamp(0) // 스클에 등록된 날짜 
+  createdAt  DateTime @default(now()) @db.Timestamp(0) // 디비에 등록된 날짜
+
+  host         Host          @relation(fields: [hostId], references: [id])
+  reservations Reservation[]
+  product      Product[]
+
+  @@index([hostId])
+}
+
+model Product {
+  id         Int      @id
+  name       String   @db.VarChar(100)
+  isPublic   String   @default("Y") @db.VarChar(4) // Y는 공개 N은 비공개 
+  registedAt DateTime @db.Timestamp(0) // 스클에 등록된 날짜 
+  createdAt  DateTime @default(now()) @db.Timestamp(0) // 디비에 등록된 날짜
+  spaceId    Int
+
+  space Space @relation(fields: [spaceId], references: [id])
+
+  @@index([spaceId])
 }
