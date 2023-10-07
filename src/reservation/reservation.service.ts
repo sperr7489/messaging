@@ -4,9 +4,10 @@ import { async } from 'rxjs';
 import { HostDto } from 'src/host-queue/dtos/host.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReservationInfo } from 'src/reservation/dtos/reservation-info.dto';
+import { CREATE_CANCELED } from './constants/reservation.constant';
 import {
   ALEADY_CANCELED,
-  NOT_YET_CANCELED,
+  UPDATE_CANCELED,
 } from './constants/reservation.constant';
 
 @Injectable()
@@ -21,49 +22,20 @@ export class ReservationService {
     return await this.prismaService.reservation.findMany();
   }
 
-  async postReservation(reservationInfo: ReservationInfo, placeId: number) {
-    let user = await this.prismaService.user.findFirst({
-      where: {
-        phoneNumber: reservationInfo.phoneNumber,
-        userName: reservationInfo.userName,
-      },
-    });
-
-    if (!user) {
-      user = await this.prismaService.user.create({
-        data: {
-          userName: reservationInfo.userName,
-          phoneNumber: reservationInfo.phoneNumber,
-        },
-      });
-    }
-
-    // 추후에 이 usedCount에 대해서는 수정사항이 필요할 수도 있을 것 같다.
-    let userId = user.id;
-    const count = await this.prismaService.reservation.count({
-      where: {
-        userId,
-        OR: [{ tagReservation: '예약확정' }, { tagReservation: '이용완료' }],
-      },
-    });
-
-    if (user.usedCount !== count) {
-      await this.prismaService.user.update({
-        where: { id: user.id },
-        data: { usedCount: count },
-      });
-    }
+  async postReservation(reservationInfo: ReservationInfo) {
+    const userId = reservationInfo.user.id;
+    const spaceId = reservationInfo.spaceDto.id;
 
     await this.prismaService.reservation.upsert({
       where: { reservationNum: Number(reservationInfo.reservationNum) },
       update: {
-        placeId,
+        spaceId,
         tagReservation: reservationInfo.tagReservation,
         dateReservation: reservationInfo.dateReservation,
       },
       create: {
-        userId: userId,
-        placeId,
+        userId,
+        spaceId,
         tagReservation: reservationInfo.tagReservation,
         dateReservation: reservationInfo.dateReservation,
         reservationNum: Number(reservationInfo.reservationNum),
@@ -98,22 +70,30 @@ export class ReservationService {
       },
     });
 
-    if (reservation?.tagReservation == '취소환불') {
-      return ALEADY_CANCELED;
+    if (reservation) {
+      if (reservation.tagReservation == '취소환불') {
+        // '이미' 예약 정보가 존재한다면 취소환불이 되어 있는 경우이다. User 정보를 업데이트 할 필요 없다.
+        return ALEADY_CANCELED; // 이미 취소환불이 처리됨
+      }
+      // 예약 확정으로 되어 있는 경우고 이를 취소해주어야 한다.
+      await this.prismaService.reservation.update({
+        where: {
+          reservationNum: reservationNumber,
+        },
+        data: {
+          tagReservation: '취소환불',
+        },
+      });
+      return UPDATE_CANCELED;
     }
-
-    await this.prismaService.reservation.upsert({
-      where: {
-        reservationNum: reservationNumber,
-      },
-      update: {
-        tagReservation: '취소환불',
-      },
-      create: {
+    // 취소 환불 된 것을 처음 발견한 경우.
+    await this.prismaService.reservation.create({
+      data: {
         reservationNum: reservationNumber,
         tagReservation: '취소환불',
       },
     });
-    return NOT_YET_CANCELED;
+
+    return CREATE_CANCELED; // 취소환불 되었는데 아직 처리가 안됨
   }
 }

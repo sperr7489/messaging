@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `User` MODIFY `id` INTEGER NOT NULL;

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `User` MODIFY `usedCount` INTEGER NULL DEFAULT 0;
