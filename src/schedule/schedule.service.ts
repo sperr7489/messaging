@@ -121,9 +121,9 @@ export class ScheduleService {
               } else {
                 // 개발 단계
                 // 김기창에 대해서만 메시지 보낼 수 있도록 하는 것.
-                // if (crawlInfo.user.phoneNumber == '01024087489') {
-                await this.aligoService.sendSMS('01024087489', message, host);
-                // }
+                if (crawlInfo.user.phoneNumber == '01024087489') {
+                  await this.aligoService.sendSMS('01024087489', message, host);
+                }
                 console.log('develop stage');
               }
             }
