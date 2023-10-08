@@ -80,6 +80,7 @@ model Space {
   isPublic String?  @default("Y") @db.VarChar(4) // Y는 공개 N은 비공개 
   message  String? @db.VarChar(2000)
   hostId   Int
+  isMessage String  @default("Y") @db.VarChar(4) // Y이면 보내고 N이면 안보냄
 
   registedAt DateTime? @db.Timestamp(0) // 스클에 등록된 날짜 
   createdAt  DateTime? @default(now()) @db.Timestamp(0) // 디비에 등록된 날짜
