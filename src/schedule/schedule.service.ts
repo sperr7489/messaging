@@ -107,9 +107,7 @@ export class ScheduleService {
               //   host,
               // );
 
-              const message =
-                crawlInfo.space.message ??
-                `${crawlInfo.space.name}를 찾아주셔서 감사합니다. \n안내 문자가 아닌 경우 ${host.aligoSender}로 연락주세요!`;
+              const message = crawlInfo.space.message;
 
               if (NODE_ENV == 'production') {
                 // 배포단계
