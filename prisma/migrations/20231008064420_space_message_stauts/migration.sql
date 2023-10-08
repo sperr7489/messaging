@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Space` ADD COLUMN `isMessage` VARCHAR(4) NOT NULL DEFAULT 'Y';
