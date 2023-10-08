@@ -94,6 +94,12 @@ export class CrawlerService {
           const spaceId = spaceReservation.id;
 
           let spaceDto: SpaceDto = spaces.find((space) => space.id == spaceId);
+          // console.log('이곳이다!', JSON.stringify(spaceDto, null, 2));
+
+          spaceReservation.message =
+            spaceDto.message ??
+            `${spaceReservation.name}를 찾아주셔서 감사합니다. \n안내 문자가 아닌 경우 ${host.aligoSender}로 연락주세요!`;
+
           let spaceExists: number = ALEADY_EXIST;
 
           if (!spaceDto) {
