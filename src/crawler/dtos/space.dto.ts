@@ -7,6 +7,8 @@ export class SpaceDto {
   isPublic?: string;
   message?: string | null;
   hostId: number;
+  isMessage?: string | null;
+
   registedAt?: Date;
   createdAt?: Date;
   constructor(option: {
