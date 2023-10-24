@@ -14,8 +14,8 @@ import {
 export class ReservationService {
   constructor(
     private readonly prismaService: PrismaService,
-  ) // private readonly configService: ConfigService,
-  {}
+    private readonly configService: ConfigService,
+  ) {}
 
   async getReservations() {
     // 추후엔 findmany에 몇개를 가져올 것인지에 대한 내용도 담도록 한다.
