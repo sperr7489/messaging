@@ -43,6 +43,8 @@ import { AligoSmsModule } from './aligo-sms/aligo-sms.module';
       name: 'host-queue',
       defaultJobOptions: {
         timeout: 30 * 1000, //60*1000 이 60초로 1분이다.
+        removeOnFail: true,
+        removeOnComplete: true,
       },
     }),
     ScheduleModule.forRoot(),

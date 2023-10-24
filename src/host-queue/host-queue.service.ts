@@ -23,10 +23,7 @@ export class HostQueueService {
 
       for (const host of hosts) {
         const hostDto = new HostDto(host);
-        await this.hostQueue.add('process-host', hostDto, {
-          removeOnComplete: true,
-          removeOnFail: true,
-        });
+        await this.hostQueue.add('process-host', hostDto);
       }
     } catch (error) {
       console.error(error);
