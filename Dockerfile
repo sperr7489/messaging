@@ -1,36 +1,32 @@
+# Use Node.js 18 alpine
 FROM node:18-alpine
 
-# RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont udev xvfb x11vnc fluxbox dbus
-# RUN apk add --no-cache --virtual .build-deps curl \
-#     && echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
-#     && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
-#     && echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
-#     && apk add --no-cache curl wget \
-#     && apk del .build-deps  # puppeteer 다운로드를 위해 필요한 라이브러리들을 설치하고 마지막에는 빌드를 위해 추가적으로 설치한 패키지들을 삭제
+# Install Redis
+RUN apk add --no-cache redis
 
-# ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser 
-# ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true 
-# ENV DISPLAY=:99  
-
+# Set the working directory
 WORKDIR /app
 
-# COPY package.json and package-lock.json files
+# Copy package.json and package-lock.json
 COPY package*.json ./
-# generated prisma files
+
+# Copy Prisma files
 COPY prisma ./prisma/
-# COPY tsconfig.json file
+
+# Copy tsconfig.json
 COPY tsconfig.json ./
 
+# Install dependencies
 RUN npm install
 
-# COPY
-COPY . .
-
-# prisma generate 실행
+# Generate Prisma client
 RUN npx prisma generate
 
-# Run and expose the server on port 3000
-EXPOSE 3000
-# A command to start the server
+# Start Redis server in the background
+RUN redis-server --daemonize yes
 
+# Expose the application on port 3000
+EXPOSE 3000
+
+# The command to run the application
 CMD ["npm", "run", "start:prod"]
