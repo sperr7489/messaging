@@ -17,6 +17,7 @@ import {
   UPDATE_CANCELED,
 } from '../reservation/constants/reservation.constant';
 import axios from 'axios';
+import { log } from 'console';
 
 @Injectable()
 export class ScheduleService {
